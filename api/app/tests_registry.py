@@ -10,4 +10,5 @@ TESTS: dict[str, dict] = {
     "kostka-v1": {"items": 20, "max_score": 20},
     "kostka-v2": {"items": 20, "max_score": 20},
     "matryce-v1": {"items": 16, "max_score": 16},
+    "ciagi-v1": {"items": 16, "max_score": 16},
 }

@@ -209,6 +209,30 @@ Liczenie zawęża wybór na poziomach 2–4 mniej więcej do dwóch opcji, ale o
 - W przeglądarce (`tests/e2e`): przejście całego testu klawiaturą, przykład, telefon 360 px w ciemnym motywie bez przewijania w poziomie.
 - Naprawiony błąd rysowania: kreskowanie skalowało się razem z figurą i wyglądało jak figura zamalowana do połowy.
 
+### 3.2 Ciągi liczbowe — zrobione (`ciagi/`, `ciagi-v1`)
+
+**Format:** odpowiedź wpisywana (pole liczbowe, Enter albo „Dalej”), do tego przycisk „Nie wiem”. Odpowiedź z przycisku zapisujemy jako pustą, bez wymuszania zgadywania. 16 zadań, 12 minut. Wpisane wartości są normalizowane: spacje, minus typograficzny, a niepoprawny format daje komunikat zamiast oceny.
+
+**Poziomy** (po 4 zadania, każda reguła poziomu występuje):
+
+| Poziom | Reguły |
+|---|---|
+| 1 | arytmetyczny, geometryczny (×2, ×3, :2) |
+| 2 | różnice drugiego rzędu, dwa działania na zmianę (+a, ×b) |
+| 3 | dwa ciągi przeplatane (8 wyrazów), każdy wyraz sumą dwóch poprzednich |
+| 4 | różnice tworzą ciąg geometryczny, przeplatany ciąg ×2 z ciągiem arytmetycznym |
+
+**Jednoznaczność.** Każdy ciąg da się formalnie przedłużyć na wiele sposobów, więc wymagamy, by wszystkie proste reguły pasujące do pokazanych wyrazów dawały tę samą odpowiedź:
+- **Generator** sprawdza to katalogiem reguł: wielomiany do 3. stopnia, iloraz, rekurencja liniowa, Fibonacci, różnice geometryczne, działania na zmianę, przeplatanie.
+- **Niezależny weryfikator** (`tests/series.test.js`) robi to inaczej: przeszukuje ogólne rodziny rekurencji z małymi całkowitymi współczynnikami, t(k+1) = a·t(k) + c + d·k i t(k+1) = a·t(k) + b·t(k−1) + c, oraz działania na zmianę i przeplatanie z jednym parametrem na podciąg (+c albo ×a).
+- **Lekcja z budowy weryfikatora:** rodzina z 4 parametrami pasuje do niemal każdych 6 liczb (tyle niewiadomych, ile równań), więc „znajdowała” bezsensowne alternatywy. Rodziny muszą zostawiać nadmiarowe równania.
+- **Wynik:** na 3200 zadaniach weryfikator zawsze znajduje regułę generatora i żadnej innej odpowiedzi.
+
+**Inne decyzje:**
+- **Bez znanego ciągu Fibonacciego.** Ciągi „suma dwóch poprzednich” nie zaczynają się od prawdziwego ciągu Fibonacciego (np. 3, 5, 8, 13…), bo ten wiele osób zna na pamięć i mierzyłby wiedzę, a nie rozumowanie. Problem wyłapał przegląd zrzutu ekranu.
+- **Naiwne przedłużenie** („powtórz ostatnią różnicę”) działa poza ciągami arytmetycznymi w mniej niż 1% zadań.
+- **Wszystkie liczby są całkowite, |x| ≤ 999.** Ciąg ma co najmniej 4 różne wartości.
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:

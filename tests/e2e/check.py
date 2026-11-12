@@ -212,6 +212,47 @@ def main():
         check(width <= 360, f"matryce: bez przewijania w poziomie na 360 px ({width}px)")
         ctx.close()
 
+        # 8. Ciągi: odpowiedź wpisywana, „Nie wiem”, błędny format, telefon.
+        ctx, page, errors = new_page(browser, viewport={"width": 1000, "height": 900})
+        page.goto(f"{SITE}/ciagi/")
+        page.fill("#ans-ex", "abc")
+        page.press("#ans-ex", "Enter")
+        check("liczbę całkowitą" in page.text_content("#example .err"), "ciągi: komunikat przy złym formacie")
+        page.fill("#ans-ex", "1")
+        page.press("#ans-ex", "Enter")
+        check(page.text_content("#exnote").startswith(("Dobrze", "Poprawna")), "ciągi: przykład ocenia odpowiedź")
+        page.check("#consent")
+        page.click("#start")
+        answers = page.evaluate("SeriesCore.generateItems('ciagi-v1', 16).map(i => i.answer)")
+        for i, ans in enumerate(answers):
+            page.wait_for_function(f"document.getElementById('count').textContent === 'Zadanie {i + 1} z 16'")
+            if i == 0:
+                page.screenshot(path="/out/ciagi-zadanie.png", full_page=True)
+            if i < 9:
+                page.keyboard.type(str(ans).replace("-", "−"))  # minus typograficzny też działa
+                page.keyboard.press("Enter")
+            elif i < 12:
+                page.fill("#ans-test", str(ans + 1))
+                page.click("#item button[type=submit]")
+            else:
+                page.click("#item [data-skip]")
+        page.wait_for_selector("#compare >> text=Zbieramy dane")
+        check(page.text_content(".score").strip().startswith("9"), f"ciągi: wynik 9 ({page.text_content('.score').strip()})")
+        page.screenshot(path="/out/ciagi-wynik.png", full_page=True)
+        check(not errors, f"ciągi: bez błędów JS: {errors}")
+        ctx.close()
+        ctx, page, errors = new_page(browser, viewport={"width": 360, "height": 780}, color_scheme="dark", device_scale_factor=2)
+        page.goto(f"{SITE}/ciagi/")
+        page.click("#start")
+        for i in range(9):
+            page.wait_for_function(f"document.getElementById('count').textContent === 'Zadanie {i + 1} z 16'")
+            page.click("#item [data-skip]")
+        page.wait_for_function("document.getElementById('count').textContent === 'Zadanie 10 z 16'")
+        page.screenshot(path="/out/ciagi-telefon-ciemny.png", full_page=True)
+        width = page.evaluate("document.documentElement.scrollWidth")
+        check(width <= 360, f"ciągi: bez przewijania w poziomie na 360 px ({width}px)")
+        ctx.close()
+
         browser.close()
     print("E2E " + ("PASSED" if not failures else f"FAILED ({len(failures)})"))
     sys.exit(1 if failures else 0)

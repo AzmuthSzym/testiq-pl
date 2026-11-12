@@ -166,3 +166,25 @@ svg.mcell { width: 100%; height: auto; display: block; aspect-ratio: 1; }
 .mfig.empty { fill: none; }
 .mfig.solid { fill: var(--ink); }
 .mstripe { stroke: var(--ink); stroke-width: 1.6; }
+
+/* ciągi liczbowe */
+.series {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  background: var(--paper); border: 1px solid var(--line); padding: 16px 10px; margin-bottom: 14px;
+}
+.series .term {
+  font-family: 'Inter', system-ui, sans-serif; font-variant-numeric: tabular-nums;
+  font-size: 24px; min-width: 52px; text-align: center; padding: 6px 8px;
+  border: 1px solid var(--line);
+}
+.series .term.q { color: var(--accent); border-color: var(--accent); }
+.answer-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+.answer-row input {
+  font: inherit; font-family: 'Inter', system-ui, sans-serif; font-size: 22px; width: 140px; padding: 8px 10px;
+  background: var(--paper); color: var(--ink); border: 1px solid var(--control);
+}
+.answer-row .err { flex-basis: 100%; text-align: center; min-height: 1.4em; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 520px) {
+  .series .term { font-size: 20px; min-width: 44px; padding: 4px 6px; }
+}
