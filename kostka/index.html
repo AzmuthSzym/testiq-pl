@@ -21,30 +21,20 @@
 </div></footer>
 
 <script src="../assets/config.js"></script>
+<script src="../assets/testiq-common.js"></script>
 <script src="../assets/cube-core.js"></script>
 <script src="../assets/cube-render.js"></script>
 <script>
 (function () {
   'use strict';
-  const C = window.CubeCore, R = window.CubeRender;
+  const C = window.CubeCore, R = window.CubeRender, T = window.TestIQ;
   const TEST_ID = 'kostka-v1';
   const N_ITEMS = 20;
   const TIME_LIMIT = 8 * 60;
   const LETTERS = 'ABCDEF';
   const app = document.getElementById('app');
 
-  const store = {
-    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
-  };
-  function participantId() {
-    let id = store.get('testiq-pid');
-    if (!id) {
-      id = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
-      store.set('testiq-pid', id);
-    }
-    return id;
-  }
+  const store = T.store;
 
   const h = (html) => { app.innerHTML = html; window.scrollTo(0, 0); };
 
@@ -93,23 +83,7 @@
       <h2>Przykład</h2>
       <div id="example"></div>
       <p class="note" id="exnote">Kliknij odpowiedź, żeby zobaczyć, czy jest poprawna.</p>
-      <h2>Zanim zaczniesz</h2>
-      <p class="note">Te dane pomogą zbudować polskie normy. Są dobrowolne.</p>
-      <label class="field">Rok urodzenia
-        <input type="number" id="by" min="1920" max="2020" placeholder="np. 1999">
-      </label>
-      <label class="field">Wykształcenie
-        <select id="edu">
-          <option value="">— wolę nie podawać —</option>
-          <option value="podstawowe">podstawowe / gimnazjalne</option>
-          <option value="zawodowe">zasadnicze zawodowe</option>
-          <option value="srednie">średnie</option>
-          <option value="wyzsze-w-trakcie">studia w trakcie</option>
-          <option value="wyzsze">wyższe</option>
-        </select>
-      </label>
-      <label class="check"><input type="checkbox" id="consent">
-        <span>Zgadzam się na anonimowe wykorzystanie moich odpowiedzi do opracowania norm testu.</span></label>
+      ${T.META_FORM}
       <p><button class="btn" id="start">Rozpocznij test</button></p>
     `);
     const ex = C.generateItems('kostka-przyklad', 4)[0];
@@ -124,11 +98,7 @@
         : 'Poprawna odpowiedź to ' + LETTERS[ex.answer] + '. Na prawdziwym teście nie zobaczysz, czy odpowiedź jest poprawna.';
     });
     document.getElementById('start').addEventListener('click', () => {
-      run({
-        birthYear: Number(document.getElementById('by').value) || null,
-        education: document.getElementById('edu').value || null,
-        consent: document.getElementById('consent').checked,
-      });
+      run(T.readMeta());
     });
   }
 
@@ -176,26 +146,19 @@
       finished = true;
       clearInterval(timer);
       const result = {
-        test: TEST_ID, version: 1, participant: participantId(),
+        test: TEST_ID, version: 1, participant: T.participantId(),
         startedAt: new Date(t0).toISOString(), durationMs: Date.now() - t0, timedOut,
         meta, responses,
       };
       store.set('testiq-last-' + TEST_ID, JSON.stringify(result));
-      send(result);
-      results(result);
+      // statystyki pobieramy dopiero po zapisie, żeby obejmowały ten wynik
+      results(result, T.sendResult(result));
     }
     show();
   }
 
-  function send(result) {
-    const url = window.TESTIQ_CONFIG && window.TESTIQ_CONFIG.apiUrl;
-    if (!url || !result.meta.consent) return;
-    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(result) })
-      .catch(() => {});
-  }
-
   // ---------- ekran 3: wynik ----------
-  function results(r) {
+  function results(r, sent) {
     const score = r.responses.filter((x) => x.correct).length;
     const rows = [1, 2, 3, 4].map((m) => {
       const sub = r.responses.filter((x) => x.moves === m);
@@ -216,10 +179,13 @@
         <tr><th>Poziom</th><th>Poprawne</th><th>Średni czas</th></tr>
         ${rows}
       </table>
+      <h2>Na tle innych uczestników</h2>
+      <div id="compare"></div>
       <h2>Co ten wynik znaczy</h2>
       <p>Na razie test nie ma polskich norm, więc nie przeliczamy wyniku na skalę IQ. Gdy zbierzemy wystarczająco dużo odpowiedzi, wynik zostanie porównany z innymi uczestnikami w twoim wieku.</p>
       <p><button class="btn ghost" id="dl">Pobierz dane (JSON)</button> <a class="btn ghost" href="../">Wróć</a></p>
     `);
+    Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), TEST_ID, score));
     document.getElementById('dl').addEventListener('click', () => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));

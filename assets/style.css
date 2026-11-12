@@ -113,6 +113,12 @@ label.check { display: flex; gap: 10px; align-items: flex-start; font-size: 16px
 .arrow { fill: var(--accent); }
 .ghost-face { fill: var(--face-top); opacity: .55; }
 
+/* rozkład wyników */
+svg.hist { width: 100%; height: auto; display: block; margin: 8px 0; }
+svg.hist .bar { fill: var(--line); }
+svg.hist .bar.mine { fill: var(--accent); }
+svg.hist .axis { fill: var(--muted); font: 12px 'Inter', system-ui, sans-serif; text-anchor: middle; }
+
 table.res { border-collapse: collapse; width: 100%; font-size: 17px; }
 table.res td, table.res th { border-bottom: 1px solid var(--line); padding: 6px 4px; text-align: left; }
 .score { font-size: 56px; line-height: 1; }

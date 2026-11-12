@@ -78,6 +78,21 @@ Testowy wpis i jego kopię usunąłem.
 
 Polecenia `./deploy.sh test|up|cert|status|backup|down`. Polecenie `up` najpierw uruchamia testy API i JS, a przy błędzie przerywa wdrożenie. Testy JS uruchamia `node --test` w kontenerze `node:22-alpine`.
 
+### 1.4 Frontend — zrobione (`apiUrl` celowo pusty)
+
+- **Wspólny moduł `assets/testiq-common.js`:** zgoda i formularz, identyfikator uczestnika, wysyłka, pobieranie statystyk i wykres rozkładu. Kolejne testy będą z niego korzystać.
+- **`apiUrl` to adres bazowy serwera:** strona dokleja `/api/results` i `/api/norms/<test>`. README jest zaktualizowane.
+- **Ekran wyniku:** przy N ≥ 30 pokazuje rozkład wyników innych z wyróżnionym wynikiem uczestnika i rangę centylową z 95% marginesem błędu. Do tego dochodzi opis próby: ochotnicy, pierwsze podejście, to jeszcze nie norma. Przy N < 30 pokazuje komunikat, że zbieramy dane, i bieżące N.
+- **Kolejność:** statystyki są pobierane dopiero po zapisie wyniku, żeby obejmowały też ten wynik. Wcześniej był tu wyścig, który wykrył test w przeglądarce.
+- **`apiUrl` zostaje pusty**, dopóki nie ma domeny (pytanie 1) i decyzji o starcie zbierania (pytanie 3).
+- **Test w przeglądarce `tests/e2e/run.sh`:** Chromium (Playwright) w Dockerze, strona i API w osobnej sieci. Przechodzi cały test i sprawdza:
+  - wysyłkę;
+  - brak wysyłki bez zgody;
+  - rozkład po 35 sztucznych wynikach;
+  - brak przewijania w poziomie na telefonie.
+
+  Zrzuty ekranu trafiają do `tests/e2e/out/`.
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:
