@@ -314,6 +314,29 @@ def main():
         check(not errors, f"słownictwo: bez błędów JS: {errors}")
         ctx.close()
 
+        # 11. Wynik łączny na stronie głównej i IQ na ekranie wyniku (normy z API
+        #     podstawione: N = 200, rzetelność 0,8 -> estymacja wstępna).
+        ctx, page, errors = new_page(browser, viewport={"width": 1000, "height": 1000})
+        fake = {"n": 200, "mean": 10, "sd": 3, "sem": 0.2, "reliability": 0.8, "byAge": [],
+                "distribution": [1] * 21, "test": "x", "maxScore": 20, "sample": "test"}
+        ctx.route("**/api/norms/**", lambda route: route.fulfill(content_type="application/json", body=json.dumps(fake)))
+        page.goto(f"{SITE}/")
+        check(page.locator("#profile").is_hidden(), "profil ukryty, gdy nie ma wyników")
+        for tid, score in [("matryce-v1", 13), ("ciagi-v1", 13)]:
+            res = {"test": tid, "meta": {"birthYear": None}, "responses": [{"item": i + 1, "correct": i < score, "ms": 5000} for i in range(16)]}
+            page.evaluate(f"localStorage.setItem('testiq-last-{tid}', {json.dumps(json.dumps(res))})")
+        page.goto(f"{SITE}/")
+        page.wait_for_selector("text=Ogólna zdolność")
+        txt = page.text_content("#profile")
+        check("115" in txt and "Z 2 testów" in txt, "wynik łączny z dwóch testów")
+        page.screenshot(path="/out/profil.png", full_page=True)
+        play_cube(page, 13)
+        page.wait_for_selector("text=Estymacja wstępna")
+        check("IQ około 115" in page.text_content("#compare"), "IQ na ekranie wyniku (13 pkt przy średniej 10, SD 3)")
+        page.screenshot(path="/out/kostka-iq.png", full_page=True)
+        check(not errors, f"profil: bez błędów JS: {errors}")
+        ctx.close()
+
         browser.close()
     print("E2E " + ("PASSED" if not failures else f"FAILED ({len(failures)})"))
     sys.exit(1 if failures else 0)

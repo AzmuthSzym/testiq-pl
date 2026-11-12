@@ -161,6 +161,25 @@ def test_both_cube_versions_accepted_separately(client):
     assert client.get("/api/norms/kostka-v2").json()["n"] == 1
 
 
+def test_norms_reliability_and_age_groups(client):
+    # 40 osób: wynik zależy od "zdolności", więc zadania są spójne (KR-20 wysokie)
+    for i in range(40):
+        body = make_result(participant=f"person-{i:04d}", correct=i % 21)
+        body["meta"]["birthYear"] = 2000 if i < 35 else 1960
+        post(client, body)
+    stats = client.get("/api/norms/kostka-v1").json()
+    assert stats["n"] == 40
+    assert stats["reliability"] > 0.9
+    # grupa 20-29 lat ma 35 osób (pokazana), 60-69 tylko 5 (ukryta)
+    assert [(g["from"], g["n"]) for g in stats["byAge"]] == [(20, 35)]
+
+
+def test_norms_small_sample_has_no_reliability(client):
+    post(client, make_result())
+    stats = client.get("/api/norms/kostka-v1").json()
+    assert stats["reliability"] is None and stats["byAge"] == []
+
+
 def test_norms_unknown_test(client):
     assert client.get("/api/norms/nie-ma").status_code == 404
 

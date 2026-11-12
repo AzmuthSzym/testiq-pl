@@ -166,7 +166,7 @@
         ${config.meaning}
         <p><button class="btn ghost" id="dl">Pobierz dane (JSON)</button> <a class="btn ghost" href="../">Wróć</a></p>
       `);
-      Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), config.id, score));
+      Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), config.id, score, r.meta));
       document.getElementById('dl').addEventListener('click', () => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));

@@ -61,16 +61,27 @@ class Database:
             self._conn.commit()
             return cur.rowcount == 1
 
-    def first_attempt_scores(self, test: str) -> list[int]:
-        """Wyniki z pierwszego podejścia każdego uczestnika (kolejne podejścia
-        są zawyżone przez efekt treningu, więc nie trafiają do norm)."""
+    def first_attempts(self, test: str) -> list[dict]:
+        """Pierwsze podejście każdego uczestnika (kolejne podejścia są zawyżone
+        przez efekt treningu, więc nie trafiają do norm): wynik, wiek w chwili
+        zgłoszenia (jeśli podano rok urodzenia) i odpowiedzi 0/1 na zadania."""
         with self._lock:
             rows = self._conn.execute(
-                """SELECT score FROM results WHERE id IN (
+                """SELECT score, birth_year, received_on, responses FROM results WHERE id IN (
                        SELECT MIN(id) FROM results WHERE test = ? GROUP BY participant)""",
                 (test,),
             ).fetchall()
-        return [row["score"] for row in rows]
+        out = []
+        for row in rows:
+            age = None
+            if row["birth_year"]:
+                age = int(row["received_on"][:4]) - row["birth_year"]
+            correct = {r["item"]: 1 if r["correct"] else 0 for r in json.loads(row["responses"])}
+            out.append({"score": row["score"], "age": age, "items": correct})
+        return out
+
+    def first_attempt_scores(self, test: str) -> list[int]:
+        return [r["score"] for r in self.first_attempts(test)]
 
     def backup_to(self, target_path: str) -> None:
         with self._lock:

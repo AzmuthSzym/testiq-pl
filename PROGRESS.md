@@ -287,6 +287,68 @@ Liczenie zawęża wybór na poziomach 2–4 mniej więcej do dwóch opcji, ale o
 - Strona główna nie ma jeszcze linku do testu.
 - Testy: `tests/vocab.test.js` i `vocab/test_approve.py`. W przeglądarce: stan „w przygotowaniu” i przejście z bankiem sztucznych słów.
 
+## Etap 4: analiza psychometryczna
+
+Kod jest w `analysis/` (Python: numpy, scipy). Uruchamia się w Dockerze przez `analysis/run.sh`, a testy są częścią `./deploy.sh test`.
+
+### 4.1 Eksport, statystyki zadań, rzetelność, wykrywanie przeklikania — zrobione
+- **`data.py`:** eksport z bazy API, tylko pierwsze podejścia. Dane w formacie długim CSV bez identyfikatorów uczestników.
+- **`items.py`:**
+  - trudność p i korelacja zadania z resztą testu (skorygowana);
+  - alfa po usunięciu zadania i alfa Cronbacha;
+  - omega McDonalda z modelu jednoczynnikowego (metoda osi głównych);
+  - błąd pomiaru.
+  - Ograniczenie: korelacje Pearsona na zadaniach 0/1 zaniżają ładunki zadań skrajnie łatwych i trudnych, więc omega jest raczej ostrożna. Lepsze byłyby korelacje tetrachoryczne, ale to sensowne dopiero przy większym N.
+- **`careless.py`:** cztery wskaźniki braku zaangażowania:
+  - odsetek odpowiedzi szybszych niż próg;
+  - najdłuższa seria tej samej opcji;
+  - znormalizowane błędy Guttmana (łatwe źle, trudne dobrze);
+  - wynik nieodróżnialny od zgadywania (test dwumianowy).
+
+  Wykluczamy osoby z ≥ 2 flagami, a normy raportujemy z wykluczeniem i bez niego. W symulacji 10 losowo klikających osób na 200 wszystkie zostały wykryte, a fałszywych alarmów było mało.
+- **`report.py`:** raport jednego testu z bazy produkcyjnej, np. `analysis/run.sh report matryce-v1 16 0.125`. Czyta kopię bazy, więc nie przeszkadza działającemu API.
+
+### 4.2 Model 2PL — zrobione, sprawdzone na danych symulowanych
+- **`irt.py`:**
+  - estymacja metodą marginalnej największej wiarygodności, EM Bocka–Aitkina, 41 węzłów kwadratury;
+  - łagodne rozkłady a priori na parametry, które stabilizują estymację przy małym N;
+  - obsługa braków odpowiedzi;
+  - θ metodą EAP z błędem standardowym oraz informacja testu.
+- **Od jakiego N to ma sens:** nie podaję reguły z literatury z pamięci, tylko wynik własnej symulacji (`analysis/wyniki/odtwarzanie_2pl.md`, test 16 zadań, 8 powtórzeń):
+
+  | N | r(â, a) | r(b̂, b) | RMSE b | r(θ̂, θ) |
+  |---|---|---|---|---|
+  | 100 | 0,69 | 0,95 | 0,30 | 0,87 |
+  | 250 | 0,71 | 0,97 | 0,24 | 0,86 |
+  | 500 | 0,86 | 0,99 | 0,13 | 0,86 |
+  | 1000 | 0,95 | 0,99 | 0,13 | 0,86 |
+  | 2000 | 0,97 | 1,00 | 0,08 | 0,87 |
+
+  **Wniosek:** trudności zadań da się sensownie oszacować od ok. 250 osób na wersję testu. Dyskryminacje od ok. 500, a stabilnie od ok. 1000. Do tego czasu wystarczają wyniki surowe i klasyczne statystyki zadań: IRT nie poprawia wyniku osoby (r(θ̂, θ) jest stałe, ograniczone rzetelnością testu), a przydaje się do oceny i wymiany zadań. `report.py` uruchamia 2PL od N ≥ 500.
+- **Uwaga:** w testach z wyborem odpowiedzi (kostka 1/6, matryce 1/8) jest zgadywanie. 2PL go nie modeluje (model 3PL tak, ale potrzebuje znacznie więcej danych), co zaniża dyskryminacje łatwych zadań. Przy N > 2000 warto porównać 2PL z 3PL.
+
+### 4.3 Skala IQ i normy według wieku — zrobione (`scoring.py`, strona)
+- **Normy:** grupy wieku 16–19, 20–29, …, 70+.
+- **IQ:** 100 + 15·z względem normy grupy, jeśli grupa ma ≥ 100 osób; w przeciwnym razie względem całej próby, co strona mówi wprost.
+- **Przedział 95%:** łączy błąd pomiaru (SD·√(1−rzetelność)) z niepewnością samej normy, bo średnią i SD znamy tylko z próby (metoda delta). Symulacja w testach sprawdza pokrycie (ok. 95%).
+- **Progi:**
+  - **< 100 osób:** IQ nie podajemy wcale.
+  - **100–399 osób:** „Estymacja wstępna” z wyraźnym ostrzeżeniem, że to nie są polskie normy, a próba składa się z ochotników.
+  - **≥ 400 osób:** „Wynik na skali IQ” z informacją, że próba nie jest reprezentatywna.
+- **API (`GET /api/norms`):** zwraca teraz rzetelność KR-20 (od 30 osób) i statystyki grup wieku (tylko grupy z ≥ 30 osobami). Strona liczy IQ tym samym wzorem co analiza w Pythonie, co sprawdza test na wartościach wzorcowych.
+
+### 4.4 Wynik łączny — zrobione (strona główna, „Twój profil”)
+- **Metoda:** znormalizowana suma wyników z rozwiązanych testów. Rzetelność sumy jest liczona z rzetelności testów i ich korelacji, a do błędu dochodzi niepewność norm.
+- **Właściwości:** dla jednego testu wynik jest taki sam jak wynik tego testu, a każdy kolejny test zawęża przedział (sprawdzone testami i symulacją).
+- **Pierwsza wersja była błędna:** szacowała ukryty czynnik g i była ściągana ku średniej, więc jej przedział wychodził szerszy niż przedziały pojedynczych testów (wyłapane na zrzucie ekranu). Wersja z sumą jest spójna z wynikami pojedynczych testów.
+- **Założenie robocze:** korelacje między testami to ok. 0,49 (ładunek 0,7), dopóki nie zbierzemy wyników tych samych osób z kilku testów. Strona to mówi.
+- **Kiedy się pokazuje:** od 2 testów z normami (≥ 100 osób). Wyniki są brane z przeglądarki uczestnika (`localStorage`), więc nic nie trzeba łączyć po stronie serwera.
+
+**Ograniczenia całego etapu:**
+- Wszystkie progi (100 / 400 osób) i założenia są do weryfikacji na prawdziwych danych.
+- Normy z próby ochotniczej nie są normami populacyjnymi i strona tego nie ukrywa.
+- KR-20 dla testu pamięci liczy próby pominięte przez regułę przerwania jako błędne, co zawyża rzetelność. Dla tego testu lepsza będzie rzetelność z podziału (np. próby 1 i 2 każdej długości), do zrobienia przy analizie danych.
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:

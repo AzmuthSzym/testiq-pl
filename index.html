@@ -47,11 +47,17 @@
     <a class="btn" href="pamiec/">Rozwiąż test</a>
   </div>
 
+  <section id="profile" hidden></section>
+
   <h2>Jak liczymy wyniki</h2>
   <p>Wynik ma sens dopiero wtedy, gdy można go porównać z innymi ludźmi. Dlatego najpierw zbieramy anonimowe odpowiedzi (tylko za zgodą uczestnika). Na ich podstawie powstaną polskie normy. Do tego czasu pokazujemy liczbę poprawnych odpowiedzi bez przeliczania na skalę IQ.</p>
   <p class="note">Przy każdym wyniku podamy, na jakiej grupie liczono normy i jaki jest margines błędu.</p>
 </main>
 
 <footer><div class="wrap">Projekt w budowie.</div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/testiq-common.js"></script>
+<script src="assets/profile.js"></script>
+<script>TestIQProfile.render(document.getElementById('profile'));</script>
 </body>
 </html>

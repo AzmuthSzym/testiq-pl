@@ -5,6 +5,57 @@
 
   // Rozkład wyników innych pokazujemy dopiero od tylu uczestników.
   const MIN_N = 30;
+  // Przeliczenie na skalę IQ: od MIN_N_IQ osób jako „estymacja wstępna”,
+  // od MIN_N_NORMS jako wynik względem norm (nadal: próba ochotnicza).
+  // Te same progi i wzory co w analysis/testiq_analysis/scoring.py.
+  const MIN_N_IQ = 100, MIN_N_NORMS = 400;
+  const AGE_NOW = new Date().getFullYear();
+
+  // IQ (średnia 100, SD 15) względem normy { n, mean, sd } i przedział 95%.
+  // Niepewność: błąd pomiaru (SD·√(1−rzetelność)) i błąd samej normy
+  // (średnia i SD znane tylko z próby N osób, metoda delta).
+  function toIQ(score, norm, reliability) {
+    if (!norm || norm.n < MIN_N_IQ || !norm.sd || reliability === null || reliability === undefined) return null;
+    const rel = Math.min(Math.max(reliability, 0), 0.99);
+    const seScore = norm.sd * Math.sqrt(1 - rel);
+    const z = (score - norm.mean) / norm.sd;
+    const seMean = norm.sd / Math.sqrt(norm.n), seSd = norm.sd / Math.sqrt(2 * (norm.n - 1));
+    const varZ = (seScore ** 2 + seMean ** 2) / norm.sd ** 2 + (z * seSd / norm.sd) ** 2;
+    const se = 15 * Math.sqrt(varZ);
+    const iq = 100 + 15 * z;
+    // część niepewności z wynikająca z samej normy (do wyniku łącznego)
+    const normSe = Math.sqrt((seMean ** 2) / norm.sd ** 2 + (z * seSd / norm.sd) ** 2);
+    return { iq: Math.round(iq), lo: Math.round(iq - 1.96 * se), hi: Math.round(iq + 1.96 * se), se, z, normSe, reliability: rel,
+      status: norm.n < MIN_N_NORMS ? 'wstepna' : 'normy', n: norm.n };
+  }
+
+  // Wynik łączny z kilku testów: pozycja na znormalizowanej sumie wyników z
+  // (jak composite() w analysis/testiq_analysis/scoring.py). tests: [{ z,
+  // reliability, normSe }]. Korelacje testów z założonych ładunków (R_ij = λ_iλ_j).
+  // Rzetelność sumy rośnie z liczbą testów, więc przedział się zawęża; dla
+  // jednego testu wynik jest taki sam jak wynik tego testu.
+  function composite(tests, loadings) {
+    const k = tests.length;
+    let varC = 0;
+    for (let i = 0; i < k; i++) for (let j = 0; j < k; j++) varC += i === j ? 1 : loadings[i] * loadings[j];
+    const errVar = tests.reduce((a, t) => a + (1 - Math.min(Math.max(t.reliability, 0), 0.99)), 0);
+    const normVar = tests.reduce((a, t) => a + (t.normSe || 0) ** 2, 0) / varC;
+    const z = tests.reduce((a, t) => a + t.z, 0) / Math.sqrt(varC);
+    const reliability = 1 - errVar / varC;
+    const se = Math.sqrt(Math.max(0, 1 - reliability) + normVar);
+    return { z, se, reliability, iq: 100 + 15 * z, lo: 100 + 15 * (z - 1.96 * se), hi: 100 + 15 * (z + 1.96 * se), k };
+  }
+
+  // Norma dla uczestnika: grupa wieku (jeśli podał rok urodzenia i grupa ma
+  // dość osób), w przeciwnym razie cała próba.
+  function normFor(norms, birthYear) {
+    if (birthYear) {
+      const age = AGE_NOW - birthYear;
+      const band = (norms.byAge || []).find((g) => age >= g.from && age <= g.to && g.n >= MIN_N_IQ);
+      if (band) return Object.assign({ label: `osoby w wieku ${band.from}–${band.to} lat` }, band);
+    }
+    return { n: norms.n, mean: norms.mean, sd: norms.sd, label: 'wszyscy uczestnicy (bez podziału na wiek)' };
+  }
 
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -151,7 +202,7 @@
 
   // Na ekranie wyniku: rozkład wyników innych (od MIN_N osób) albo
   // informacja, że zbieramy dane.
-  function renderComparison(container, testId, score) {
+  function renderComparison(container, testId, score, meta) {
     container.innerHTML = '<p class="note">Wczytywanie wyników innych uczestników…</p>';
     return fetchNorms(testId).then((norms) => {
       if (!norms || !norms.n || norms.n < MIN_N) {
@@ -168,9 +219,24 @@
         <p class="note">Próba: ${norms.n} osób, każda liczona raz (pierwsze podejście). Średnia ${norms.mean.toFixed(1)}, odchylenie standardowe ${norms.sd.toFixed(1)}.
         To ochotnicy, którzy trafili na stronę, a nie próba reprezentatywna dla Polski, więc to porównanie nie jest jeszcze normą.</p>`;
       container.querySelector('.hist-wrap').appendChild(histogramSvg(norms.distribution, score));
+      const norm = normFor(norms, meta && meta.birthYear);
+      const est = toIQ(score, norm, norms.reliability);
+      if (est) {
+        const box = document.createElement('div');
+        box.className = 'card iq';
+        box.innerHTML = `
+          <div class="kicker">${est.status === 'wstepna' ? 'Estymacja wstępna' : 'Wynik na skali IQ'}</div>
+          <p class="iq-value">IQ około <strong>${est.iq}</strong> <span class="note">(przedział 95%: ${est.lo}–${est.hi})</span></p>
+          <p class="note">Porównanie: ${norm.label}, ${norm.n} osób. Rzetelność testu w tej próbie: ${String(norms.reliability).replace('.', ',')}.
+          Przedział uwzględnia błąd pomiaru i to, że średnią i rozrzut wyników znamy tylko z tej próby.</p>
+          <p class="note">${est.status === 'wstepna'
+            ? '<strong>To nie jest wynik testu z polskimi normami.</strong> Próba jest mała i składa się z ochotników, którzy sami trafili na stronę. Zwykle radzą sobie lepiej niż przeciętna, więc ta liczba może zaniżać lub zawyżać twój wynik względem populacji Polski. Traktuj ją jako orientacyjną.'
+            : 'Próba jest duża, ale nadal ochotnicza, a nie reprezentatywna dla Polski. Wynik mówi, jak wypadasz na tle osób rozwiązujących ten test.'}</p>`;
+        container.appendChild(box);
+      }
     });
   }
 
-  root.TestIQ = { MIN_N, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
+  root.TestIQ = { MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.TestIQ;
 })(typeof window !== 'undefined' ? window : globalThis);

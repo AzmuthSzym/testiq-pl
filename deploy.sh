@@ -33,6 +33,8 @@ run_tests() {
   docker run --rm testiq-api-test
   echo "== testy narzędzi słownictwa"
   docker run --rm -v "$ROOT/vocab:/vocab:ro" python:3.12-slim python /vocab/test_approve.py
+  echo "== testy analizy"
+  "$ROOT/analysis/run.sh" test
   echo "== testy JS"
   docker run --rm -v "$ROOT:/w:ro" -w /w node:22-alpine sh -c 'node --test tests/*.test.js'
 }

@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from .db import Database
 from .models import Result
-from .norms import summarize
+from .norms import by_age, kr20, summarize
 from .ratelimit import RateLimiter
 from .tests_registry import TESTS
 
@@ -117,8 +117,11 @@ def create_app(
         now = time.monotonic()
         if cached and now - cached[0] < NORMS_CACHE_SECONDS:
             return cached[1]
-        stats = summarize(app.state.db.first_attempt_scores(test), spec["max_score"])
+        attempts = app.state.db.first_attempts(test)
+        stats = summarize([a["score"] for a in attempts], spec["max_score"])
         stats.update({
+            "reliability": kr20(attempts, spec["items"]),
+            "byAge": by_age(attempts, spec["max_score"]),
             "test": test,
             "maxScore": spec["max_score"],
             "sample": "pierwsze podejście każdego uczestnika, który wyraził zgodę; próba ochotnicza, niereprezentatywna",
