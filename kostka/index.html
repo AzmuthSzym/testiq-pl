@@ -28,7 +28,9 @@
 (function () {
   'use strict';
   const C = window.CubeCore, R = window.CubeRender, T = window.TestIQ;
-  const TEST_ID = 'kostka-v1';
+  const TEST_ID = 'kostka-v2';
+  // Wersja generatora (assets/cube-core.js): 2 = ruchy, które się nie znoszą.
+  const GEN_VERSION = 2;
   const N_ITEMS = 20;
   const TIME_LIMIT = 8 * 60;
   const LETTERS = 'ABCDEF';
@@ -104,7 +106,7 @@
 
   // ---------- ekran 2: test ----------
   function run(meta) {
-    const items = C.generateItems(TEST_ID, N_ITEMS);
+    const items = C.generateItems(TEST_ID, N_ITEMS, { version: GEN_VERSION });
     const responses = [];
     const t0 = Date.now();
     let idx = 0, tShown = 0, finished = false;
@@ -146,7 +148,7 @@
       finished = true;
       clearInterval(timer);
       const result = {
-        test: TEST_ID, version: 1, participant: T.participantId(),
+        test: TEST_ID, version: GEN_VERSION, participant: T.participantId(),
         startedAt: new Date(t0).toISOString(), durationMs: Date.now() - t0, timedOut,
         meta, responses,
       };

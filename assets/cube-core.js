@@ -85,9 +85,40 @@
       .join('|');
   }
 
+  // Najmniejsza liczba ruchów z MOVES prowadząca od orientacji A do B
+  // (przeszukiwanie wszerz po 24 orientacjach kostki). Każdą orientację da się
+  // osiągnąć w najwyżej 3 ruchach.
+  const keyR = (R) => R.map(key).join(';');
+  function minMoves(A, B) {
+    const target = keyR(B);
+    let frontier = [A];
+    const seen = new Set([keyR(A)]);
+    for (let d = 0; frontier.length; d++) {
+      if (frontier.some((R) => keyR(R) === target)) return d;
+      const next = [];
+      for (const R of frontier) for (const m of MOVES) {
+        const R2 = applyMove(R, m);
+        if (!seen.has(keyR(R2))) { seen.add(keyR(R2)); next.push(R2); }
+      }
+      frontier = next;
+    }
+    return Infinity;
+  }
+
+  // Największa możliwa odległość wypadkowego obrotu po n ruchach.
+  function fullDistance(n) { return n % 2 === 0 ? Math.min(n, 2) : Math.min(n, 3); }
+
   // ---------- generator zadań ----------
   // Poziomy trudności: liczba ruchów rośnie co 5 zadań.
-  function generateItems(seedStr, count) {
+  // Wersja 1 (kostka-v1): ruchy losowe; część zadań skraca się do mniejszej
+  //   liczby ruchów (np. każde z 4 ruchami do 2), więc poziom zawyża trudność.
+  // Wersja 2 (kostka-v2): żadne ruchy się nie znoszą: wypadkowy obrót wymaga
+  //   tylu ruchów, ile się da przy danej liczbie (fullDistance). Ćwierćobrót
+  //   to permutacja nieparzysta czterech przekątnych kostki, więc parzysta
+  //   liczba ruchów daje orientację w odległości 0 lub 2, a nieparzysta 1 lub 3;
+  //   dlatego 4 ruchy zawsze dają obrót osiągalny w 2 ruchach (więcej się nie da).
+  function generateItems(seedStr, count, opts) {
+    const version = (opts && opts.version) || 1;
     const rnd = mulberry32(hashSeed(seedStr));
     const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
     const shuffle = (arr) => {
@@ -124,6 +155,7 @@
       const correctSig = signature(end, faces);
       if (!correctSig.split('|').some((s) => s !== '_')) continue; // musi być widać symbol
       if (correctSig === signature(start, faces)) continue; // ruchy nie mogą się znosić
+      if (version >= 2 && minMoves(start, end) !== fullDistance(nMoves)) continue;
 
       // Dystraktory: „prawie dobre” sekwencje, potem losowe orientacje.
       const near = [];
@@ -163,7 +195,7 @@
   const C30 = Math.cos(Math.PI / 6), S30 = 0.5;
   function proj(p) { return [(p[0] - p[2]) * C30, -p[1] + (p[0] + p[2]) * S30]; }
 
-  const api = { MOVES, BODY_FACES, VIEW_DIRS, applyMove, toWorld, visibleFaces, signature, generateItems, proj, neg, add, scale, eq };
+  const api = { MOVES, minMoves, fullDistance, BODY_FACES, VIEW_DIRS, applyMove, toWorld, visibleFaces, signature, generateItems, proj, neg, add, scale, eq };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.CubeCore = api;
 })(this);

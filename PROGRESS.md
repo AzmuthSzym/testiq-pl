@@ -93,6 +93,33 @@ Polecenia `./deploy.sh test|up|cert|status|backup|down`. Polecenie `up` najpierw
 
   Zrzuty ekranu trafiają do `tests/e2e/out/`.
 
+## Etap 2: jakość istniejącego testu
+
+### 2.1 Testy generatora kostek — zrobione, wynik: nowa wersja `kostka-v2`
+
+`tests/cube.test.js` (`node --test`) sprawdza na `kostka-v1`, `kostka-v2`, przykładzie i 150 losowych ziarnach, że:
+- poprawna odpowiedź jest jedyna (porównanie sygnatur widoku);
+- 6 opcji jest różnych i każda pokazuje symbol;
+- ruchy nie znoszą się do zera;
+- poprawne odpowiedzi są równo rozłożone na A–F (w każdych kolejnych 6 zadaniach każda litera raz, więc w 20 zadaniach 4/4/3/3/3/3);
+- poziomy to 5 × 1, 2, 3 i 4 ruchy.
+
+**Znaleziony problem w `kostka-v1`:** ruchy często się skracały. Zadanie 11 (3 obroty) da się zastąpić jednym obrotem, a wszystkie zadania z 4 obrotami dwoma. Na 6000 zadań z losowych ziaren skracało się 43%. Etykieta poziomu zawyżała więc trudność.
+
+**Ograniczenie matematyczne:** ćwierćobrót kostki to nieparzysta permutacja jej czterech przekątnych (grupa obrotów kostki ≅ S4). Dlatego parzysta liczba ruchów zawsze daje obrót osiągalny w 0 albo 2 ruchach, a nieparzysta w 1 albo 3. Test `parzystość` sprawdza to wprost na wszystkich sekwencjach. Zadanie z 4 ruchami zawsze ma więc skrót do 2. Poziom „4 obroty” mierzy śledzenie dłuższej sekwencji, a nie trudniejszy obrót wypadkowy, i tak opiszemy to w metodologii.
+
+**Decyzja: `kostka-v2`.** Generator w wersji 2 odrzuca sekwencje, których obrót wypadkowy jest krótszy, niż pozwala parzystość (`fullDistance`): 1→1, 2→2, 3→3, 4→2. To wyklucza prawdziwe znoszenie się ruchów, np. „do przodu, do tyłu”.
+- Strona używa teraz `kostka-v2`.
+- `kostka-v1` generuje się bez zmian; pilnuje tego test z sumą kontrolną, żeby dało się odtworzyć zadania dla zapisanych wyników.
+- API przyjmuje obie wersje osobno, a ich statystyki się nie mieszają.
+
+### 2.2 Niezależny weryfikator — zrobione
+
+`tests/cube-verifier.js` liczy obroty na permutacjach etykiet kierunków (`+X`, `-Y`…), wyprowadzonych wprost z instrukcji dla uczestnika („ścianka ze strzałką przetacza się w kierunku strzałki”). Nie używa macierzy ani iloczynów wektorowych z generatora.
+- **Dane wejściowe:** wyłącznie to, co widzi uczestnik, czyli trzy widoczne ścianki z symbolem i jego kierunkiem.
+- **Wynik:** dla każdego zadania (ok. 3000 zadań) wskazuje dokładnie jedną pasującą odpowiedź, równą kluczowi generatora.
+- **Dodatkowe testy:** zgodność numeracji ruchów z generatorem (żeby zgodność nie była przypadkowa) i to, że 4 takie same ruchy wracają do stanu wyjścia.
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:

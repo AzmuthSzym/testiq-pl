@@ -27,7 +27,7 @@ Każde podejście zapisywane jest w `localStorage`. Jeśli ustawiono `apiUrl` i 
 
 ```json
 {
-  "test": "kostka-v1", "participant": "uuid", "durationMs": 312000, "timedOut": false,
+  "test": "kostka-v2", "version": 2, "participant": "uuid", "durationMs": 312000, "timedOut": false,
   "meta": { "birthYear": 1999, "education": "wyzsze", "consent": true },
   "responses": [{ "item": 1, "moves": 1, "choice": 3, "correct": true, "ms": 5400 }]
 }

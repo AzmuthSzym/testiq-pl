@@ -152,6 +152,15 @@ def test_norms_use_first_attempt_only(client):
     assert "niereprezentatywna" in stats["sample"]
 
 
+def test_both_cube_versions_accepted_separately(client):
+    post(client, make_result())
+    body = make_result()
+    body["test"] = "kostka-v2"
+    assert post(client, body).status_code == 201
+    assert client.get("/api/norms/kostka-v1").json()["n"] == 1
+    assert client.get("/api/norms/kostka-v2").json()["n"] == 1
+
+
 def test_norms_unknown_test(client):
     assert client.get("/api/norms/nie-ma").status_code == 404
 

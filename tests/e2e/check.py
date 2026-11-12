@@ -42,7 +42,7 @@ def play_cube(page, correct_count, consent=True, keyboard=False):
         page.check("#consent")
     page.fill("#by", "1990")
     page.click("#start")
-    answers = page.evaluate("CubeCore.generateItems('kostka-v1', 20).map(i => i.answer)")
+    answers = page.evaluate("CubeCore.generateItems('kostka-v2', 20, {version: 2}).map(i => i.answer)")
     for i, ans in enumerate(answers):
         choice = ans if i < correct_count else (ans + 1) % 6
         page.wait_for_selector(f"text=Zadanie {i + 1} z 20")
@@ -56,7 +56,7 @@ def play_cube(page, correct_count, consent=True, keyboard=False):
 def seed(page, n):
     for i in range(n):
         body = {
-            "test": "kostka-v1", "version": 1, "participant": f"seed-participant-{i:04d}",
+            "test": "kostka-v2", "version": 1, "participant": f"seed-participant-{i:04d}",
             "startedAt": "2026-11-12T10:00:00Z", "durationMs": 300000, "timedOut": False,
             "meta": {"birthYear": None, "education": None, "consent": True},
             "responses": [{"item": k + 1, "correct": k < (i % 21), "ms": 4000, "choice": 0, "moves": 1}
@@ -76,7 +76,7 @@ def main():
         page.goto(f"{SITE}/kostka/")
         page.screenshot(path="/out/kostka-intro-desktop.png", full_page=True)
         play_cube(page, 12)
-        page.wait_for_selector("text=Zbieramy dane")
+        page.wait_for_selector("#compare >> text=Zbieramy dane")
         check("na razie: 1" in page.inner_text("#compare"), "pierwszy wynik zapisany w API")
         page.screenshot(path="/out/kostka-wynik-malo-danych.png", full_page=True)
         check(not errors, f"bez błędów JS: {errors}")
