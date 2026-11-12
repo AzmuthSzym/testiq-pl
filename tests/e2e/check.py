@@ -285,6 +285,35 @@ def main():
         check(not errors, f"pamięć: bez błędów JS: {errors}")
         ctx.close()
 
+        # 10. Słownictwo: bez zatwierdzonych zadań „w przygotowaniu”; z przykładowym
+        #     bankiem (sztuczne słowa, tylko w teście) przejście testu.
+        ctx, page, errors = new_page(browser)
+        page.goto(f"{SITE}/slownictwo/")
+        page.wait_for_selector("text=Test w przygotowaniu")
+        check(True, "słownictwo: bez zatwierdzonych zadań test niedostępny")
+        ctx.close()
+        bank = [{"band": b, "pos": "rzeczownik", "word": f"słowo{b}{k}", "synonym": f"synonim{b}{k}",
+                 "distractors": [f"inne{b}{k}{d}" for d in range(4)]} for b in (1, 2, 3, 4) for k in range(6)]
+        ctx, page, errors = new_page(browser, viewport={"width": 390, "height": 844}, color_scheme="dark", device_scale_factor=2)
+        ctx.route("**/slownictwo/items.json", lambda route: route.fulfill(
+            content_type="application/json", body=json.dumps({"notice": "test", "items": bank})))
+        page.goto(f"{SITE}/slownictwo/")
+        page.check("#consent")
+        page.click("#start")
+        for i in range(20):
+            page.wait_for_function(f"document.getElementById('count').textContent === 'Zadanie {i + 1} z 20'")
+            if i == 0:
+                page.screenshot(path="/out/slownictwo-telefon-ciemny.png", full_page=True)
+            word = page.text_content(".vocab-word")
+            target = word.replace("słowo", "synonim")
+            opts = page.locator(".vocab-opt")
+            idx = [k for k in range(5) if target in opts.nth(k).text_content()][0]
+            page.keyboard.press("ABCDE"[idx if i < 12 else (idx + 1) % 5])
+        page.wait_for_selector("#compare >> text=Zbieramy dane")
+        check(page.text_content(".score").strip().startswith("12"), f"słownictwo: wynik 12 ({page.text_content('.score').strip()})")
+        check(not errors, f"słownictwo: bez błędów JS: {errors}")
+        ctx.close()
+
         browser.close()
     print("E2E " + ("PASSED" if not failures else f"FAILED ({len(failures)})"))
     sys.exit(1 if failures else 0)

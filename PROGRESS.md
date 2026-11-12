@@ -262,6 +262,31 @@ Liczenie zawęża wybór na poziomach 2–4 mniej więcej do dwóch opcji, ale o
 - W przeglądarce: przykład z klawiatury ekranowej, przejście z przerwaniem obu części, zapis w API.
 - API przyjmuje nowe pole `span` (długość ciągu).
 
+### 3.4 Słownictwo — zrobione silnik i kandydaci; zadania czekają na przegląd
+
+**Lista frekwencyjna: wordfreq** (Robyn Speer), dane na **CC BY-SA 4.0**, czyli użytek komercyjny dozwolony z uznaniem autorstwa i na tych samych warunkach. Sprawdzone opcje (SOURCES.md):
+- **Leipzig Corpora Collection:** CC BY-NC, odpada (niekomercyjne).
+- **SUBTLEX-PL:** „do celów badawczych”, niejasne dla użytku komercyjnego.
+- **Listy NKJP / KWJP:** serwer niedostępny, nie udało się sprawdzić licencji.
+
+**Synonimy: plWordNet** w wersji Open Multilingual Wordnet 1.4 (`omw-pl`). Licencja przeczytana w pliku LICENSE z paczki: wolno używać, kopiować, modyfikować i rozpowszechniać do dowolnych celów, także komercyjnych, pod warunkiem umieszczenia informacji o prawach autorskich i zastrzeżeń na wszystkich kopiach. Dlatego `slownictwo/items.json` i stopka strony zawierają informację o źródłach.
+
+**Kandydaci:** `vocab/build_candidates.py` uruchamiany w Dockerze. Wynik to **`vocab/kandydaci/kandydaci.tsv`**: 600 kandydatów, po 150 w 4 pasmach częstości. **Plik jest tylko na VPS-ie, poza gitem** (`vocab/.gitignore`), bo repozytorium jest publiczne.
+- **Konstrukcja zadania:** słowo docelowe, jego częstszy synonim i 4 dystraktory tej samej części mowy o podobnej częstości co synonim, żeby częstość nie podpowiadała.
+- **Wykluczenia:**
+  - słowa wieloznaczne (więcej niż 2 znaczenia);
+  - pary o wspólnym początku (zdrobnienia, ten sam rdzeń);
+  - dystraktory ze znaczeniem powiązanym z odpowiedzią;
+  - wulgaryzmy i słowa obraźliwe z listy.
+- **Przegląd próbki:** ok. 1/3 to dobre zadania (np. „meritum → sedno”, „zagadnienie → problem”, „wszechnica → uniwersytet”). Reszta wymaga poprawek albo odrzucenia: polskie synsety są w OMW zmapowane na angielski WordNet, więc „synonimy” bywają tylko pokrewne. Zdarzają się też pary nacechowane („bolszewik → komuch”), zapożyczenia i warianty pisowni („avocado → awokado”). Instrukcja dla przeglądającego jest w `vocab/approve.py`.
+
+**Test** (`slownictwo/`, `slownictwo-v1`):
+- 20 zadań (po 5 z pasma), 5 opcji, 6 minut.
+- Zadania pochodzą wyłącznie z `slownictwo/items.json`, który tworzy `vocab/approve.py` z wierszy oznaczonych „tak”.
+- Dopóki zatwierdzonych zadań jest za mało, strona pokazuje „Test w przygotowaniu”.
+- Strona główna nie ma jeszcze linku do testu.
+- Testy: `tests/vocab.test.js` i `vocab/test_approve.py`. W przeglądarce: stan „w przygotowaniu” i przejście z bankiem sztucznych słów.
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:
@@ -272,3 +297,5 @@ Liczenie zawęża wybór na poziomach 2–4 mniej więcej do dwóch opcji, ale o
    Polecam b), jeśli i tak planujesz własną domenę dla strony, a w przeciwnym razie a). Każda opcja to koszt albo publikacja, więc decyzja należy do Ciebie.
 2. **Kopia poza serwerem.** Kopie leżą na tym samym dysku co baza. Warto je co jakiś czas wysyłać gdzie indziej (np. szyfrowane do chmury), ale wybór miejsca to decyzja o przekazaniu danych osobom trzecim.
 3. **Uruchomienie zbierania danych.** Ustawienie `apiUrl` na gałęzi `main` (GitHub Pages) oznacza start zbierania danych osobowych (rok urodzenia, wykształcenie). Wcześniej potrzebna jest opublikowana polityka prywatności (szkic powstanie w etapie 5, do Twojej weryfikacji). Dlatego zmiany frontendu trzymam na gałęzi `rozbudowa` i nie scalam ich do `main`.
+4. **Przegląd kandydatów do testu słownictwa.** Plik `vocab/kandydaci/kandydaci.tsv` jest na VPS-ie (`~/projects/testiq-pl/vocab/kandydaci/`). Potrzeba co najmniej 5 zatwierdzonych zadań na pasmo, a najlepiej po 10–15, żeby mieć zapas na wymianę słabych zadań po analizie. Po przeglądzie: `python3 vocab/approve.py`. Zatwierdzone zadania staną się publiczne przy scaleniu do `main`.
+5. **Licencja share-alike (wordfreq, CC BY-SA 4.0).** Pasma trudności wyliczamy z danych wordfreq. Czy lista zadań z pasmami jest „utworem zależnym” bazy, który też musi być na CC BY-SA? To pytanie prawne (LEGAL-TODO.md). Bezpieczna alternatywa: publikować zadania bez informacji o częstości (pasmo tylko jako kolejność), albo wyznaczać pasma z własnych danych o trudności (etap 4), gdy je zbierzemy.
