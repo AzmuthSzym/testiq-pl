@@ -130,3 +130,28 @@ test('weryfikator: cztery takie same ruchy wracają do stanu wyjścia', () => {
   const top = V.applyMove([{ symbol: 2, at: '+Y', right: '+X' }], 0)[0];
   assert.deepStrictEqual([top.at, top.right], ['+Z', '+X']);
 });
+
+test('opcje same w sobie nie zdradzają odpowiedzi (strategie zgadywania)', () => {
+  // Uczestnik, który nie rozwiązuje zadania, tylko patrzy na opcje, nie
+  // powinien wyraźnie przebijać zgadywania (1/6). Najsilniejsza znana
+  // strategia: "wybierz opcję najbardziej podobną do pozostałych" (dystraktory
+  // budowane z drobnych zmian ruchów otaczają poprawną odpowiedź) daje ok. 21%.
+  const strategies = {
+    podobna: (opts) => {
+      const sig = opts.map((o) => o.map((f) => (f.symbol === null ? '_' : f.symbol + '@' + f.u.join())));
+      return sig.map((s, i) => sig.reduce((a, t, j) => a + (i === j ? 0 : s.filter((x, k) => x === t[k]).length), 0));
+    },
+    'najwięcej symboli': (opts) => opts.map((o) => o.filter((f) => f.symbol !== null).length),
+  };
+  for (const [name, fn] of Object.entries(strategies)) {
+    let hits = 0, n = 0;
+    for (const seed of V2_SEEDS) for (const it of itemsFor(seed)) {
+      const scores = fn(it.options.map((R) => C.visibleFaces(R, it.faces)));
+      const best = Math.max(...scores);
+      const winners = scores.map((s, i) => (s === best ? i : -1)).filter((i) => i >= 0);
+      hits += winners.includes(it.answer) ? 1 / winners.length : 0;
+      n++;
+    }
+    assert.ok(hits / n < 0.25, `${name}: ${(hits / n * 100).toFixed(1)}%`);
+  }
+});

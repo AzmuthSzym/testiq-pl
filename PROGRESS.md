@@ -120,6 +120,43 @@ Polecenia `./deploy.sh test|up|cert|status|backup|down`. Polecenie `up` najpierw
 - **Wynik:** dla każdego zadania (ok. 3000 zadań) wskazuje dokładnie jedną pasującą odpowiedź, równą kluczowi generatora.
 - **Dodatkowe testy:** zgodność numeracji ruchów z generatorem (żeby zgodność nie była przypadkowa) i to, że 4 takie same ruchy wracają do stanu wyjścia.
 
+### 2.3 Dostępność i UX — zrobione
+
+**Naprawiony błąd w teście.** Szybkie podwójne kliknięcie (w ciągu 180 ms przed pokazaniem kolejnego zadania) zapisywało drugą odpowiedź jako odpowiedź na **następne** zadanie, którego uczestnik nie widział, i je pomijało. Teraz każde zadanie przyjmuje tylko jedną odpowiedź. Sprawdza to test w przeglądarce.
+
+**Klawiatura:**
+- Klawisze A–F (lub 1–6) działają w teście i w przykładzie, ale nie w polach formularza ani ze skrótami Ctrl/Alt.
+- Elementy mają widoczny fokus (`:focus-visible`).
+- Licznik zadań ma `aria-live`, a zegar `role="timer"`.
+- Obsługa klawiszy jest we wspólnym module (`TestIQ.onKeys`, `choiceFromKey`).
+
+**Kontrast** (WCAG 2.1), liczony automatycznie z CSS w obu motywach (`tests/a11y.test.js`): tekst ≥ 4,5:1, elementy interfejsu ≥ 3:1. Poprawki:
+- w ciemnym motywie biały tekst na przyciskach miał 2,7:1, teraz jest ciemny tekst (6,8:1);
+- obramowania opcji odpowiedzi i pól formularza miały 1,4:1, teraz mają ≥ 3,2:1;
+- kolor „poprawnie” w przykładzie w ciemnym motywie jest jaśniejszy (6,2:1).
+
+**Telefon:**
+- Na 360 px kostka startowa i 4 ruchy mieszczą się w jednym rzędzie (wcześniej się zawijały).
+- Strona nie przewija się w poziomie (sprawdzane na 360 i 390 px).
+- Pole zgody jest większe.
+
+**Opuszczenie strony:**
+- W trakcie testu przeglądarka ostrzega przed odświeżeniem lub zamknięciem karty (`beforeunload`), a po teście już nie.
+- Instrukcja mówi wprost, że odświeżenie kasuje odpowiedzi i że nie da się wrócić do poprzedniego zadania.
+
+**Inne:** w ostatniej minucie zegar zmienia kolor, a przy `prefers-reduced-motion` pasek postępu nie jest animowany.
+
+**Sprawdzenie, czy odpowiedź da się zgadnąć z samych opcji (bez rozwiązywania):**
+
+| Strategia | Trafność |
+|---|---|
+| Opcja najbardziej podobna do pozostałych | 20,8% |
+| Najwięcej symboli | 10,5% |
+| Taka jak kostka startowa | 10,2% |
+| Losowo | 16,7% |
+
+Przewaga pierwszej strategii jest niewielka, ok. 0,8 pkt na 20 zadań, i wynika z budowy dystraktorów: drobne zmiany sekwencji ruchów „otaczają” poprawną odpowiedź. Na razie zostawiam, a test pilnuje progu 25%. Jeśli analiza danych pokaże, że to istotne, w `kostka-v3` dystraktory będą dobierane tak, żeby wyrównać podobieństwo (tak jak w matrycach, etap 3.1).
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:

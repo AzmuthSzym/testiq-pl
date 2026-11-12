@@ -72,6 +72,11 @@
       grid.appendChild(b);
     });
     container.appendChild(grid);
+    // klawisze A–F (albo 1–6) działają jak kliknięcie
+    T.onKeys((e) => {
+      const i = T.choiceFromKey(e, item.options.length);
+      if (i >= 0) { e.preventDefault(); grid.children[i].click(); }
+    });
   }
 
   // ---------- ekran 1: opis + przykład ----------
@@ -82,9 +87,10 @@
       <p class="lead">Test wyobraźni przestrzennej: trzeba w myślach śledzić, jak zmienia się położenie kostki po kolejnych obrotach.</p>
       <p>Kostka jest obracana o ćwierć obrotu, krok po kroku, tak jak pokazują strzałki. Ścianka ze strzałką przetacza się w kierunku, w który strzałka wskazuje. Wybierz obrazek, który pokazuje kostkę po wszystkich obrotach.</p>
       <p>Ścianki, których na początku nie widać, są puste. Na obrazkach z odpowiedziami też będą puste.</p>
+      <p>Odpowiadasz kliknięciem albo klawiszem A–F. Nie da się wrócić do poprzedniego zadania. Nie odświeżaj strony w trakcie testu: odpowiedzi przepadną.</p>
       <h2>Przykład</h2>
       <div id="example"></div>
-      <p class="note" id="exnote">Kliknij odpowiedź, żeby zobaczyć, czy jest poprawna.</p>
+      <p class="note" id="exnote" aria-live="polite">Wybierz odpowiedź, żeby zobaczyć, czy jest poprawna.</p>
       ${T.META_FORM}
       <p><button class="btn" id="start">Rozpocznij test</button></p>
     `);
@@ -112,7 +118,7 @@
     let idx = 0, tShown = 0, finished = false;
 
     h(`
-      <div class="testbar"><span class="kicker" id="count"></span><span class="timer" id="timer"></span></div>
+      <div class="testbar"><span class="kicker" id="count" aria-live="polite"></span><span class="timer" id="timer" role="timer" aria-label="Pozostały czas"></span></div>
       <div class="progress"><div id="bar"></div></div>
       <p class="question">Która kostka pokazuje położenie po wszystkich obrotach?</p>
       <div id="item"></div>
@@ -121,18 +127,26 @@
     const tick = () => {
       const left = Math.max(0, TIME_LIMIT - Math.floor((Date.now() - t0) / 1000));
       timerEl.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+      timerEl.classList.toggle('low', left <= 60);
       if (left === 0) finish(true);
     };
     const timer = setInterval(tick, 250);
+    T.guardUnload(true);
     tick();
 
     function show() {
+      if (finished) return;
       document.getElementById('count').textContent = 'Zadanie ' + (idx + 1) + ' z ' + N_ITEMS;
       document.getElementById('bar').style.width = (idx / N_ITEMS * 100) + '%';
       const box = document.getElementById('item');
       box.innerHTML = '';
       tShown = Date.now();
+      // jedna odpowiedź na zadanie: drugie kliknięcie (albo klawisz) przed
+      // pokazaniem kolejnego zadania nie może trafić do następnego
+      let answered = false;
       renderItem(box, items[idx], (i, b) => {
+        if (answered || finished) return;
+        answered = true;
         b.classList.add('picked');
         responses.push({
           item: idx + 1, moves: items[idx].moves.length, choice: i,
@@ -147,6 +161,8 @@
       if (finished) return;
       finished = true;
       clearInterval(timer);
+      T.guardUnload(false);
+      T.onKeys(null);
       const result = {
         test: TEST_ID, version: GEN_VERSION, participant: T.participantId(),
         startedAt: new Date(t0).toISOString(), durationMs: Date.now() - t0, timedOut,

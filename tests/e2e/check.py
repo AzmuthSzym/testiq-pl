@@ -103,7 +103,54 @@ def main():
         page.screenshot(path="/out/kostka-wynik-rozklad.png", full_page=True)
         ctx.close()
 
-        # 4. Telefon w ciemnym motywie: zrzuty do obejrzenia.
+        # 4. Klawiatura, podwójne kliknięcie, ostrzeżenie przed opuszczeniem.
+        ctx, page, errors = new_page(browser)
+        page.goto(f"{SITE}/kostka/")
+        page.keyboard.press("c")
+        note = page.text_content("#exnote")
+        check(note.startswith("Dobrze") or note.startswith("Poprawna odpowiedź to"),
+              f"przykład działa z klawiatury: {note[:40]}")
+        page.click("#start")
+        page.wait_for_selector("text=Zadanie 1 z 20")
+        page.locator(".options .opt").nth(0).dblclick()
+        page.wait_for_selector("text=Zadanie 2 z 20")
+        page.wait_for_timeout(400)
+        check(page.text_content("#count") == "Zadanie 2 z 20", f"podwójne kliknięcie = jedna odpowiedź ({page.text_content('#count')})")
+        page.keyboard.press("b")
+        page.wait_for_selector("text=Zadanie 3 z 20")
+        page.keyboard.press("4")
+        page.wait_for_selector("text=Zadanie 4 z 20")
+        check(True, "odpowiedzi klawiszami B i 4")
+        dialogs = []
+        page.on("dialog", lambda d: (dialogs.append(d.type), d.dismiss()))
+        page.close(run_before_unload=True)
+        ctx.pages[0].wait_for_timeout(500) if ctx.pages else None
+        check(dialogs == ["beforeunload"], f"ostrzeżenie przed opuszczeniem testu: {dialogs}")
+        ctx.close()
+        ctx, page, errors = new_page(browser)
+        play_cube(page, 3, keyboard=True)
+        dialogs = []
+        page.on("dialog", lambda d: (dialogs.append(d.type), d.dismiss()))
+        page.close(run_before_unload=True)
+        check(dialogs == [], "po teście bez ostrzeżenia")
+        ctx.close()
+
+        # 5. Wąski telefon (360 px), zadanie z 4 ruchami: wszystko w jednym rzędzie.
+        ctx, page, errors = new_page(browser, viewport={"width": 360, "height": 780}, device_scale_factor=2)
+        page.goto(f"{SITE}/kostka/")
+        page.click("#start")
+        for i in range(15):
+            page.wait_for_selector(f"text=Zadanie {i + 1} z 20")
+            page.keyboard.press("a")
+        page.wait_for_selector("text=Zadanie 16 z 20")
+        tops = page.eval_on_selector_all(".stem figure", "fs => fs.map(f => Math.round(f.getBoundingClientRect().top))")
+        check(len(tops) == 5 and len(set(tops)) <= 2, f"kostka i 4 ruchy w jednym rzędzie: {tops}")
+        width = page.evaluate("document.documentElement.scrollWidth")
+        check(width <= 360, f"bez przewijania w poziomie na 360 px ({width}px)")
+        page.screenshot(path="/out/kostka-4-ruchy-360.png", full_page=True)
+        ctx.close()
+
+        # 6. Telefon w ciemnym motywie: zrzuty do obejrzenia.
         ctx, page, errors = new_page(browser, viewport={"width": 390, "height": 844},
                                      color_scheme="dark", device_scale_factor=2)
         page.goto(f"{SITE}/kostka/")

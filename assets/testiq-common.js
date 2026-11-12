@@ -26,6 +26,40 @@
     return url ? String(url).replace(/\/+$/, '') : '';
   }
 
+  // ---------- klawiatura i ochrona przed opuszczeniem strony ----------
+  // Jeden aktywny obsługujący klawisze (bieżące zadanie). Klawisze wpisywane
+  // w pola formularza i skróty z Ctrl/Alt/Cmd są pomijane.
+  let keyHandler = null;
+  if (typeof document !== 'undefined') {
+    document.addEventListener('keydown', (e) => {
+      if (!keyHandler || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      const t = e.target;
+      if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) return;
+      keyHandler(e);
+    });
+  }
+  function onKeys(fn) { keyHandler = fn || null; }
+
+  // Indeks odpowiedzi z klawisza: A–F (lub dalsze litery) albo 1–9; -1 = inny klawisz.
+  function choiceFromKey(e, n) {
+    const k = String(e.key || '').toUpperCase();
+    let i = k.length === 1 ? 'ABCDEFGHI'.indexOf(k) : -1;
+    if (i < 0 && /^[1-9]$/.test(k)) i = Number(k) - 1;
+    return i >= 0 && i < n ? i : -1;
+  }
+
+  // Ostrzeżenie przeglądarki przy odświeżeniu lub zamknięciu karty w trakcie testu.
+  let unloadGuard = null;
+  function guardUnload(on) {
+    if (on && !unloadGuard) {
+      unloadGuard = (e) => { e.preventDefault(); e.returnValue = ''; };
+      root.addEventListener('beforeunload', unloadGuard);
+    } else if (!on && unloadGuard) {
+      root.removeEventListener('beforeunload', unloadGuard);
+      unloadGuard = null;
+    }
+  }
+
   // ---------- formularz przed testem ----------
   const META_FORM = `
     <h2>Zanim zaczniesz</h2>
@@ -137,6 +171,6 @@
     });
   }
 
-  root.TestIQ = { MIN_N, store, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
+  root.TestIQ = { MIN_N, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.TestIQ;
 })(typeof window !== 'undefined' ? window : globalThis);
