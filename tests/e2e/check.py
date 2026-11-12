@@ -53,6 +53,23 @@ def play_cube(page, correct_count, consent=True, keyboard=False):
     page.wait_for_selector("text=Wynik")
 
 
+def play_runner(page, path, answers_js, keyboard=False, correct_count=None):
+    """Przechodzi test zbudowany na TestRunner: odpowiedzi z generatora w przeglądarce."""
+    page.goto(f"{SITE}/{path}/")
+    page.check("#consent")
+    page.click("#start")
+    answers = page.evaluate(answers_js)
+    for i, ans in enumerate(answers):
+        page.wait_for_function(f"document.getElementById('count') && document.getElementById('count').textContent === 'Zadanie {i + 1} z {len(answers)}'")
+        choice = ans if correct_count is None or i < correct_count else (ans + 1) % 8
+        if keyboard:
+            page.keyboard.press("ABCDEFGH"[choice])
+        else:
+            page.locator("#item .opt").nth(choice).click()
+    page.wait_for_selector("text=Wynik")
+    return answers
+
+
 def seed(page, n):
     for i in range(n):
         body = {
@@ -160,6 +177,39 @@ def main():
         page.screenshot(path="/out/kostka-zadanie-telefon-ciemny.png", full_page=True)
         width = page.evaluate("document.documentElement.scrollWidth")
         check(width <= 390, f"bez przewijania w poziomie na telefonie ({width}px)")
+        ctx.close()
+
+        # 7. Matryce: przejście, wynik, zrzuty (komputer i telefon w ciemnym motywie).
+        ctx, page, errors = new_page(browser, viewport={"width": 1000, "height": 1100})
+        page.goto(f"{SITE}/matryce/")
+        page.screenshot(path="/out/matryce-intro.png", full_page=True)
+        page.locator("#example .opt").nth(0).click()
+        check(page.locator("#example .opt.right").count() == 1, "matryce: przykład pokazuje poprawną odpowiedź")
+        page.check("#consent")
+        page.click("#start")
+        page.wait_for_selector("text=Zadanie 1 z 16")
+        page.screenshot(path="/out/matryce-zadanie-1.png", full_page=True)
+        answers = page.evaluate("MatrixCore.generateItems('matryce-v1', 16).map(i => i.answer)")
+        for i, ans in enumerate(answers):
+            page.wait_for_function(f"document.getElementById('count').textContent === 'Zadanie {i + 1} z 16'")
+            if i == 13:
+                page.screenshot(path="/out/matryce-zadanie-14.png", full_page=True)
+            page.keyboard.press("ABCDEFGH"[ans if i < 10 else (ans + 1) % 8])
+        page.wait_for_selector("#compare >> text=Zbieramy dane")
+        check(page.text_content(".score").strip().startswith("10"), f"matryce: wynik 10 ({page.text_content('.score').strip()})")
+        page.screenshot(path="/out/matryce-wynik.png", full_page=True)
+        check(not errors, f"matryce: bez błędów JS: {errors}")
+        ctx.close()
+        ctx, page, errors = new_page(browser, viewport={"width": 360, "height": 780}, color_scheme="dark", device_scale_factor=2)
+        page.goto(f"{SITE}/matryce/")
+        page.click("#start")
+        for i in range(13):
+            page.wait_for_function(f"document.getElementById('count').textContent === 'Zadanie {i + 1} z 16'")
+            page.keyboard.press("a")
+        page.wait_for_function("document.getElementById('count').textContent === 'Zadanie 14 z 16'")
+        page.screenshot(path="/out/matryce-telefon-ciemny.png", full_page=True)
+        width = page.evaluate("document.documentElement.scrollWidth")
+        check(width <= 360, f"matryce: bez przewijania w poziomie na 360 px ({width}px)")
         ctx.close()
 
         browser.close()

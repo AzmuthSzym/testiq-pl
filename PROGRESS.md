@@ -157,6 +157,58 @@ Polecenia `./deploy.sh test|up|cert|status|backup|down`. Polecenie `up` najpierw
 
 Przewaga pierwszej strategii jest niewielka, ok. 0,8 pkt na 20 zadań, i wynika z budowy dystraktorów: drobne zmiany sekwencji ruchów „otaczają” poprawną odpowiedź. Na razie zostawiam, a test pilnuje progu 25%. Jeśli analiza danych pokaże, że to istotne, w `kostka-v3` dystraktory będą dobierane tak, żeby wyrównać podobieństwo (tak jak w matrycach, etap 3.1).
 
+## Etap 3: kolejne testy
+
+**Wspólny silnik `assets/test-runner.js`.** Nowe testy korzystają z jednego przebiegu:
+- opis z przykładem, formularz i zgoda;
+- zegar, jedna odpowiedź na zadanie, klawiatura, ostrzeżenie przed odświeżeniem;
+- zapis odpowiedzi z czasem reakcji i poziomem;
+- ekran wyniku z tabelą poziomów i porównaniem z innymi.
+
+Test kostki zostaje na swoim kodzie, bo jest sprawdzony i nie ma powodu go ruszać.
+
+### 3.1 Matryce — zrobione (`matryce/`, `matryce-v1`)
+
+**Generator** (`assets/matrix-core.js`), rysowanie w SVG (`assets/matrix-render.js`):
+- **Cechy:** kształt, liczba figur, wielkość, wypełnienie, obrót strzałki i odcinki w tle.
+- **Reguły** (typy z Carpenter, Just i Shell, 1990): stała w wierszu, stała w kolumnie, progresja, rozkład trzech wartości oraz dodawanie, różnica symetryczna i odejmowanie odcinków.
+- **Format:** 16 zadań, po 4 na poziom, 8 opcji (A–H), 15 minut.
+
+**Poziomy:**
+
+| Poziom | Reguły |
+|---|---|
+| 1 | 4 cechy, same reguły „stała w wierszu/kolumnie” |
+| 2 | progresja + 2 reguły proste |
+| 3 | progresja + rozkład trzech + reguła prosta |
+| 4 | działanie na odcinkach + 2 reguły trudne (każde z trzech działań co najmniej raz) |
+
+**Klucz:** generator odrzuca zadania, w których więcej niż jedna reguła pasuje do 8 komórek, a różne reguły dają różne odpowiedzi. Niezależny weryfikator w `tests/matrix.test.js` sprawdza to inaczej niż generator: zamiast przewidywać brakującą komórkę, wstawia w nią każdą możliwą wartość i sprawdza, które dają matrycę zgodną z jakimkolwiek typem reguły. Na ok. 2400 zadaniach (150 ziaren) każda cecha ma dokładnie jedną poprawną wartość i dokładnie jedna opcja pasuje.
+
+**Pułapka „najczęstszej cechy” i jak jej unikamy.** W źle zbudowanych matrycach (Mittring i Rost, 2008; SOURCES.md) poprawną odpowiedź da się wskazać bez patrzenia na matrycę, np. wybierając opcję, której cechy najczęściej powtarzają się wśród opcji. Nasze rozwiązanie:
+1. **8 opcji to wszystkie kombinacje** (poprawna / błędna wartość) trzech zmieniających się cech. Każda wartość każdej cechy występuje w 4 z 8 opcji, a opcje tworzą symetryczny sześcian, więc ani „najczęstsza cecha”, ani „najbardziej (albo najmniej) podobna do pozostałych” nie wyróżnia odpowiedzi.
+2. **Błędne wartości to typowe pomyłki wzięte z matrycy** (przepisanie sąsiedniej komórki, pomylenie działania), więc nie da się ich odrzucić tylko dlatego, że nigdzie nie występują.
+3. **Żaden dystraktor nie jest kopią komórki matrycy.** Poprawna odpowiedź nigdy nią nie jest, więc kopie dałoby się odrzucić bez rozwiązywania. To wymusiło 4 cechy na poziomie 1: przy jednej cesze w danym kierunku kopia jest nieunikniona.
+4. **Liczenie wartości w matrycy.** Reguły stałości i rozkładu trzech można zastosować przez liczenie, bo każda wartość występuje w pełnej matrycy 3 razy, a brakująca tylko 2 razy wśród 8 widocznych pól. Na poziomie 1 to po prostu zastosowanie reguły. Od poziomu 2 każde zadanie ma cechę, której liczenie nie rozwiązuje (progresja albo odcinki), a jej błędną wartość dobieramy tak, by w matrycy nie była częstsza od poprawnej.
+
+**Zmierzona trafność strategii zgadywania** (2400 zadań; losowo 12,5%):
+
+| Strategia | Trafność |
+|---|---|
+| Najczęstsze cechy wśród opcji (pułapka z literatury) | 12,5% |
+| Najbardziej / najmniej podobna do pozostałych opcji | 12,5% / 12,5% |
+| Odrzuć wartości spoza matrycy | 10,1% |
+| Odrzuć kopie komórek | 12,5% |
+| Podobna / niepodobna do komórki obok pustego pola | 4,9% / 17,4% |
+| Liczenie wartości w matrycy, poziom 1 / 2 / 3 / 4 | 100% / 65% / 54% / 51% |
+
+Liczenie zawęża wybór na poziomach 2–4 mniej więcej do dwóch opcji, ale ostatni krok wymaga zrozumienia progresji albo działania na odcinkach. Testy pilnują progów (strategie z samych opcji < 20%, liczenie na poziomach 2–4 ≤ 70%). Wynik z poziomu 1 trzeba będzie uwzględnić przy kalibracji: te zadania są z założenia łatwe.
+
+**Testy:**
+- 20 testów w `tests/matrix.test.js`.
+- W przeglądarce (`tests/e2e`): przejście całego testu klawiaturą, przykład, telefon 360 px w ciemnym motywie bez przewijania w poziomie.
+- Naprawiony błąd rysowania: kreskowanie skalowało się razem z figurą i wyglądało jak figura zamalowana do połowy.
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:

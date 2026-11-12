@@ -9,4 +9,5 @@ TESTS: dict[str, dict] = {
     # v1: część zadań skracała się do mniejszej liczby ruchów (PROGRESS.md, 2.1)
     "kostka-v1": {"items": 20, "max_score": 20},
     "kostka-v2": {"items": 20, "max_score": 20},
+    "matryce-v1": {"items": 16, "max_score": 16},
 }
