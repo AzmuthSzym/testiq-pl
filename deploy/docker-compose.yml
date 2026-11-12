@@ -1,0 +1,56 @@
+# Test IQ PL: API + nginx + kopia zapasowa (+ certbot w trybie "letsencrypt").
+# Uruchamiaj przez ../deploy.sh, który ustawia zmienne z deploy/.env.
+
+services:
+  api:
+    build: ../api
+    image: testiq-api
+    restart: unless-stopped
+    environment:
+      DB_PATH: /data/results.db
+      TRUST_PROXY: "1"
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://azmuthszym.github.io}
+      RATE_LIMIT: ${RATE_LIMIT:-20}
+    volumes:
+      - ./data:/data
+    # bez publikowania portu: dostęp tylko przez nginx
+
+  backup:
+    image: testiq-api
+    restart: unless-stopped
+    command: ["python", "-m", "app.backup"]
+    environment:
+      DB_PATH: /data/results.db
+      BACKUP_DIR: /backups
+      KEEP_DAYS: ${KEEP_DAYS:-14}
+    volumes:
+      - ./data:/data
+      - ./backups:/backups
+    depends_on: [api]
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "${HTTP_BIND:-127.0.0.1:8080}:80"
+      - "${HTTPS_BIND:-127.0.0.1:8443}:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      REAL_IP_FROM: ${REAL_IP_FROM:-127.0.0.1/32}
+    volumes:
+      - ./nginx/${NGINX_MODE:-http}:/etc/nginx/templates:ro
+      - ./nginx/common.conf:/etc/nginx/snippets/common.conf:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    # przeładowanie co 6 h, żeby nginx podchwycił odnowione certyfikaty
+    command: ["/bin/sh", "-c", "(while sleep 6h; do nginx -s reload; done) & exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
+
+  certbot:
+    image: certbot/certbot:v3.0.1
+    profiles: ["letsencrypt"]
+    restart: unless-stopped
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: ["/bin/sh", "-c", "while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h; done"]

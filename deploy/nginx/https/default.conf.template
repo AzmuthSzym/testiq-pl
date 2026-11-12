@@ -1,0 +1,34 @@
+# Tryb "https": własna domena wskazująca na ten serwer, certyfikat
+# Let's Encrypt (certbot, webroot). Port 80 tylko do odnawiania certyfikatu
+# i przekierowania na HTTPS.
+
+limit_req_zone $binary_remote_addr zone=api:1m rate=30r/m;
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+    access_log off;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:5m;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    include /etc/nginx/snippets/common.conf;
+}

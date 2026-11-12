@@ -1,0 +1,22 @@
+# Tryb "http": nginx bez TLS. Do użycia, gdy HTTPS kończy się wcześniej
+# (proxy dostawcy VPS, np. subdomena z panelu mikr.us, albo Cloudflare)
+# oraz do testów lokalnych. REAL_IP_FROM = adresy tego zaufanego proxy:
+# tylko od nich bierzemy prawdziwy adres klienta z X-Forwarded-For.
+
+limit_req_zone $binary_remote_addr zone=api:1m rate=30r/m;
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+
+    set_real_ip_from ${REAL_IP_FROM};
+    real_ip_header X-Forwarded-For;
+    real_ip_recursive on;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    include /etc/nginx/snippets/common.conf;
+}
