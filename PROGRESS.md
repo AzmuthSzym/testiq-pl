@@ -349,6 +349,69 @@ Kod jest w `analysis/` (Python: numpy, scipy). Uruchamia się w Dockerze przez `
 - Normy z próby ochotniczej nie są normami populacyjnymi i strona tego nie ukrywa.
 - KR-20 dla testu pamięci liczy próby pominięte przez regułę przerwania jako błędne, co zawyża rzetelność. Dla tego testu lepsza będzie rzetelność z podziału (np. próby 1 i 2 każdej długości), do zrobienia przy analizie danych.
 
+## Etap 5: przygotowanie pod wersję płatną (bez płatności)
+
+### 5.1 Projekt raportu — zrobione (`docs/RAPORT.md`)
+**Warunki sensowności:**
+- normy z ≥ 400 osób na test;
+- rzetelność ≥ 0,80;
+- korelacje między testami z danych;
+- darmowy wynik pozostaje darmowy.
+
+**Zawartość:**
+- podsumowanie;
+- profil zdolności, w którym różnice między testami pokazujemy tylko powyżej krytycznej różnicy;
+- szczegóły testów, ostrzeżenia o jakości pomiaru, jak czytać wynik, aneks techniczny.
+
+**Czego nie obiecujemy:** diagnozy, „prawdziwego IQ”, dokładności lepszej niż przedział, treningu mózgu, porównań z celebrytami i opisów osobowości.
+
+### 5.2 Strony — zrobione
+- **`metodologia/`:**
+  - co mierzy każdy test i jak powstają i są sprawdzane zadania;
+  - normy i progi 30/100/400;
+  - skala IQ i źródła niepewności, wynik łączny;
+  - czego testy nie mówią.
+- **`prywatnosc/`:** **szkic do Twojej weryfikacji**, z wyraźnym oznaczeniem na stronie i polami w [nawiasach] do uzupełnienia. Opisuje faktyczne działanie kodu:
+  - co zostaje tylko w przeglądarce;
+  - co idzie na serwer po zgodzie;
+  - brak IP w bazie i dziennikach (skrót z dzienną solą tylko w pamięci);
+  - brak cookies i analityki, wiek 16+.
+- **`zrodla/`:** bibliografia, licencje zasobów i czcionek, zasoby odrzucone.
+- **Stopka:** linki w stopce na wszystkich stronach. Formularz zgody linkuje do zasad prywatności.
+
+**Zmiany w kodzie wynikające z prywatności:**
+- **Czcionki z własnego serwera** zamiast z Google Fonts (`assets/fonts/`, licencje OFL w repozytorium). Wcześniej każde wejście na stronę wysyłało adres IP użytkownika do Google. Test w przeglądarce sprawdza, że wszystkie zapytania idą tylko do własnych serwerów.
+- **Osoby poniżej 16 lat** (wiek zgody w RODO w Polsce):
+  - strona nie wysyła ich wyników, a API je odrzuca;
+  - treść zgody zawiera oświadczenie o ukończeniu 16 lat.
+- **`slownictwo/items.json`:** pusty plik z informacją o licencjach, bez listy zadań. Bez niego strona testu dostawała błąd 404.
+
+### 5.3 Sprawy prawne — zrobione (`LEGAL-TODO.md`)
+Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
+- **Licencje:** share-alike wordfreq, informacja plWordNet, ICAR, ETS, nazwa i znak towarowy, brak licencji repozytorium.
+- **RODO:**
+  - administrator, podstawa i treść zgody;
+  - czy wyniki to dane z art. 9, `localStorage` bez zgody;
+  - prawa osób (brakuje narzędzia do usuwania wyników po identyfikatorze);
+  - retencja kopii, rejestr i DPIA;
+  - przekazywanie do USA: GitHub, ewentualnie Cloudflare.
+- **Regulamin i prawo konsumenckie:** odstąpienie przy treściach cyfrowych, Omnibus, płatności, VAT OSS, forma działalności.
+- **Ryzyko wprowadzania w błąd** (nazwa „Test IQ”) i granica czynności zastrzeżonych dla psychologów.
+
+## Podsumowanie i co dalej
+
+**Stan:** wszystkie etapy 1–5 są zrobione w zakresie, który da się zrobić bez Twoich decyzji. Gałąź `rozbudowa` (lokalnie na VPS-ie) zawiera:
+- 5 testów: kostka-v2, matryce, ciągi, pamięć oraz słownictwo czekające na przegląd zadań;
+- API, wdrożenie, analizę i dokumentację.
+
+**Testy:** `./deploy.sh test` uruchamia API (31), analizę (16), narzędzia słownictwa i JS (65). Do tego `tests/e2e/run.sh`, czyli Chromium: przejście każdego testu, telefon, ciemny motyw, prywatność.
+
+**Kolejność dalszych kroków:**
+1. Decyzje z pytań 1, 3 i 4 poniżej (domena, start zbierania, przegląd słownictwa) oraz uzupełnienie polityki prywatności.
+2. Wdrożenie API z domeną, `apiUrl` na `main`, scalenie `rozbudowa` → `main`.
+3. Narzędzie do usuwania wyników na żądanie (LEGAL-TODO, RODO) przed szerszym ogłoszeniem.
+4. Po pierwszych ~250 osobach na test: `analysis/run.sh report …`, przegląd zadań, ewentualnie nowe wersje testów.
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:
@@ -361,3 +424,4 @@ Kod jest w `analysis/` (Python: numpy, scipy). Uruchamia się w Dockerze przez `
 3. **Uruchomienie zbierania danych.** Ustawienie `apiUrl` na gałęzi `main` (GitHub Pages) oznacza start zbierania danych osobowych (rok urodzenia, wykształcenie). Wcześniej potrzebna jest opublikowana polityka prywatności (szkic powstanie w etapie 5, do Twojej weryfikacji). Dlatego zmiany frontendu trzymam na gałęzi `rozbudowa` i nie scalam ich do `main`.
 4. **Przegląd kandydatów do testu słownictwa.** Plik `vocab/kandydaci/kandydaci.tsv` jest na VPS-ie (`~/projects/testiq-pl/vocab/kandydaci/`). Potrzeba co najmniej 5 zatwierdzonych zadań na pasmo, a najlepiej po 10–15, żeby mieć zapas na wymianę słabych zadań po analizie. Po przeglądzie: `python3 vocab/approve.py`. Zatwierdzone zadania staną się publiczne przy scaleniu do `main`.
 5. **Licencja share-alike (wordfreq, CC BY-SA 4.0).** Pasma trudności wyliczamy z danych wordfreq. Czy lista zadań z pasmami jest „utworem zależnym” bazy, który też musi być na CC BY-SA? To pytanie prawne (LEGAL-TODO.md). Bezpieczna alternatywa: publikować zadania bez informacji o częstości (pasmo tylko jako kolejność), albo wyznaczać pasma z własnych danych o trudności (etap 4), gdy je zbierzemy.
+6. **Wypchnięcie gałęzi na GitHub.** Commity są tylko lokalnie. Wypchnięcie gałęzi `rozbudowa` (bez scalania do `main`) nie zmienia strony, ale repozytorium jest publiczne, więc kod i dokumentacja (w tym LEGAL-TODO.md i szkic polityki) staną się widoczne.

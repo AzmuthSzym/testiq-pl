@@ -129,7 +129,7 @@
       </select>
     </label>
     <label class="check"><input type="checkbox" id="consent">
-      <span>Zgadzam się na anonimowe wykorzystanie moich odpowiedzi do opracowania norm testu. Bez zgody wynik zostaje tylko w tej przeglądarce.</span></label>`;
+      <span>Mam ukończone 16 lat i zgadzam się na anonimowe wykorzystanie moich odpowiedzi do opracowania norm testu (<a href="../prywatnosc/">zasady prywatności</a>). Bez zgody wynik zostaje tylko w tej przeglądarce.</span></label>`;
 
   function readMeta() {
     const by = Number(document.getElementById('by').value);
@@ -141,9 +141,15 @@
   }
 
   // ---------- wysyłka i statystyki ----------
+  // Zgody na przetwarzanie danych w RODO (w Polsce) może udzielić osoba,
+  // która ukończyła 16 lat; wyników osób deklarujących młodszy wiek nie wysyłamy.
+  const MIN_AGE = 16;
+  function tooYoung(meta) {
+    return !!(meta && meta.birthYear && new Date().getFullYear() - meta.birthYear < MIN_AGE);
+  }
   function sendResult(result) {
     const base = apiBase();
-    if (!base || !result.meta || !result.meta.consent) return Promise.resolve(false);
+    if (!base || !result.meta || !result.meta.consent || tooYoung(result.meta)) return Promise.resolve(false);
     return fetch(base + '/api/results', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(result),
     }).then((r) => r.ok).catch(() => false);
@@ -237,6 +243,6 @@
     });
   }
 
-  root.TestIQ = { MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
+  root.TestIQ = { MIN_AGE, tooYoung, MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.TestIQ;
 })(typeof window !== 'undefined' ? window : globalThis);

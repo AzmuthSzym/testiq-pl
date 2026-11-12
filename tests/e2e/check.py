@@ -337,6 +337,25 @@ def main():
         check(not errors, f"profil: bez błędów JS: {errors}")
         ctx.close()
 
+        # 12. Strony tekstowe i brak zapytań do zewnętrznych serwerów (prywatność:
+        #     czcionki lokalne, bez analityki): każde zapytanie idzie do site albo api.
+        ctx, page, errors = new_page(browser, viewport={"width": 390, "height": 844}, device_scale_factor=2)
+        hosts = set()
+        page.on("request", lambda r: hosts.add(r.url.split("/")[2]))
+        for path in ["", "metodologia/", "prywatnosc/", "zrodla/", "kostka/", "matryce/", "ciagi/", "pamiec/", "slownictwo/"]:
+            page.goto(f"{SITE}/{path}")
+            page.wait_for_load_state("networkidle")
+            width = page.evaluate("document.documentElement.scrollWidth")
+            check(width <= 390, f"/{path}: bez przewijania w poziomie ({width}px)")
+            check(page.locator("footer .footnav a").count() == 3, f"/{path}: linki w stopce")
+        page.goto(f"{SITE}/metodologia/")
+        page.screenshot(path="/out/metodologia-telefon.png", full_page=True)
+        fonts = page.evaluate("document.fonts.check('16px \"EB Garamond\"') && document.fonts.check('12px Inter')")
+        check(fonts, "czcionki wczytane lokalnie")
+        check(hosts <= {"site:8000", "api:8000"}, f"tylko własne serwery: {sorted(hosts)}")
+        check(not errors, f"strony: bez błędów JS: {errors}")
+        ctx.close()
+
         browser.close()
     print("E2E " + ("PASSED" if not failures else f"FAILED ({len(failures)})"))
     sys.exit(1 if failures else 0)

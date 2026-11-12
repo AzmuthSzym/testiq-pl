@@ -1,4 +1,5 @@
 import copy
+from datetime import datetime
 import json
 import os
 import sqlite3
@@ -75,6 +76,7 @@ def test_rejects_without_consent(client):
     lambda b: b.update(participant="x"),
     lambda b: b.update(durationMs=-5),
     lambda b: b["meta"].update(birthYear=1800),
+    lambda b: b["meta"].update(birthYear=datetime.now().year - 15),  # poniżej 16 lat
     lambda b: b["meta"].update(education="doktorat-z-kosmosu"),
     lambda b: b["meta"].update(email="ktos@example.com"),  # nadmiarowe dane osobowe
     lambda b: b.update(ip="1.2.3.4"),

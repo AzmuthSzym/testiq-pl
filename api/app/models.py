@@ -8,12 +8,24 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 EDUCATION = Literal["podstawowe", "zawodowe", "srednie", "wyzsze-w-trakcie", "wyzsze"]
 
 
+# Zgody w RODO (w Polsce) może udzielić osoba, która ukończyła 16 lat.
+MIN_AGE = 16
+
+
 class Meta(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    birthYear: Optional[int] = Field(default=None, ge=1900, le=2025)
+    birthYear: Optional[int] = Field(default=None, ge=1900)
     education: Optional[EDUCATION] = None
     consent: bool
+
+
+    @field_validator("birthYear")
+    @classmethod
+    def adult_enough(cls, v):
+        if v is not None and datetime.now().year - v < MIN_AGE:
+            raise ValueError("osoba poniżej 16 lat")
+        return v
 
 
 class Response(BaseModel):

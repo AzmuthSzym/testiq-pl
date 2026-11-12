@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metodologia — Test IQ PL</title>
+<link rel="stylesheet" href="../assets/fonts.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="../">Test IQ <span>PL</span></a>
+  <span class="kicker">Wersja robocza</span>
+</div></header>
+<main class="wrap prose">
+<div class="kicker">Jak to działa</div>
+<h1>Metodologia</h1>
+<p class="lead">Co mierzą nasze testy, jak powstają zadania, jak liczymy wyniki i czego uczciwie nie potrafimy powiedzieć.</p>
+
+<h2>Testy i to, co mierzą</h2>
+<table class="res">
+  <tr><th>Test</th><th>Co mierzy</th><th>Format</th></tr>
+  <tr><td><a href="../kostka/">Obracanie kostki</a></td><td>wyobraźnię przestrzenną: śledzenie w myślach obrotów bryły</td><td>20 zadań, 6 opcji, 8 min</td></tr>
+  <tr><td><a href="../matryce/">Matryce</a></td><td>rozumowanie abstrakcyjne na nowym materiale (tzw. inteligencja płynna)</td><td>16 zadań, 8 opcji, 15 min</td></tr>
+  <tr><td><a href="../ciagi/">Ciągi liczbowe</a></td><td>rozumowanie indukcyjne na liczbach</td><td>16 zadań, odpowiedź wpisywana, 12 min</td></tr>
+  <tr><td><a href="../pamiec/">Pamięć robocza</a></td><td>przechowywanie (w przód) i przetwarzanie (wspak) informacji w pamięci</td><td>do 28 prób, ok. 10 min</td></tr>
+  <tr><td>Słownictwo</td><td>znajomość słów (tzw. inteligencja skrystalizowana); test w przygotowaniu</td><td>20 zadań, 5 opcji, 6 min</td></tr>
+</table>
+<p>Każdy test mierzy jedną wąską zdolność. Żaden nie jest „testem IQ” w sensie klinicznym. Wynik łączny z kilku testów jest lepszym przybliżeniem ogólnej zdolności niż wynik jednego testu, ale nadal nie zastępuje badania psychologicznego.</p>
+
+<h2>Skąd się biorą zadania</h2>
+<ul>
+  <li><strong>Generator z ziarnem.</strong> Wszystkie zadania tworzy program według jawnych reguł, a nie człowiek. Każdy uczestnik danej wersji testu dostaje te same zadania, w tej samej kolejności, co pozwala porównywać wyniki.</li>
+  <li><strong>Klucz liczy program, a drugi niezależny program go sprawdza.</strong> W teście kostki obroty są liczone dwiema metodami, na macierzach i na permutacjach ścianek. W matrycach generator przewiduje brakujące pole, a weryfikator sprawdza wszystkie możliwe odpowiedzi. W ciągach weryfikator przeszukuje szeroką rodzinę reguł, żeby upewnić się, że żadna inna prosta reguła nie daje innej odpowiedzi.</li>
+  <li><strong>Odporność na zgadywanie.</strong> Sprawdzamy, czy poprawną odpowiedź da się wskazać bez rozwiązywania zadania, np. wybierając opcję, której cechy najczęściej powtarzają się wśród odpowiedzi. W matrycach takie strategie działają na poziomie losowym.</li>
+  <li><strong>Wersje.</strong> Każda zmiana zadań to nowa wersja testu (np. <code>kostka-v2</code>). Wyniki różnych wersji nigdy się nie mieszają.</li>
+  <li><strong>Słownictwo.</strong> Zadania tego testu powstają z otwartych zasobów językowych (plWordNet, wordfreq), ale do testu trafiają dopiero po ręcznym przeglądzie.</li>
+</ul>
+<p>Nie kopiujemy zadań z cudzych testów. Inspirują nas opublikowane metody, a <a href="../zrodla/">źródła</a> podajemy wprost.</p>
+
+<h2>Jak powstają normy</h2>
+<ul>
+  <li><strong>Kto trafia do porównań.</strong> Wyniki są zbierane tylko od osób, które ukończyły 16 lat i zaznaczyły zgodę. Liczymy tylko pierwsze podejście każdej osoby, bo przy kolejnych wynik rośnie z wprawy.</li>
+  <li><strong>Próba nie jest reprezentatywna.</strong> To ochotnicy, którzy sami trafili na stronę. Zwykle są młodsi, lepiej wykształceni i bardziej zainteresowani testami niż przeciętny mieszkaniec Polski. Dlatego „porównanie z innymi uczestnikami” znaczy dokładnie to, a nie „porównanie z populacją”.</li>
+  <li><strong>Odsiewanie przeklikanych testów.</strong> Przed liczeniem norm odrzucamy testy rozwiązane bez zaangażowania: bardzo szybkie odpowiedzi, wybieranie wciąż tej samej opcji, wynik na poziomie zgadywania albo nietypowy wzór błędów.</li>
+</ul>
+<table class="res">
+  <tr><th>Liczba uczestników</th><th>Co pokazujemy</th></tr>
+  <tr><td>poniżej 30</td><td>tylko wynik i informację, że zbieramy dane</td></tr>
+  <tr><td>od 30</td><td>rozkład wyników innych i ranga centylowa z marginesem błędu</td></tr>
+  <tr><td>od 100</td><td>„estymacja wstępna” na skali IQ z przedziałem 95%</td></tr>
+  <tr><td>od 400</td><td>wynik na skali IQ względem uczestników (nadal: próba ochotnicza)</td></tr>
+</table>
+<p>Jeśli podasz rok urodzenia, a w twojej grupie wieku jest dość osób, porównujemy cię z rówieśnikami. Inaczej porównujemy z całą próbą i mówimy to wprost.</p>
+
+<h2>Skala IQ i margines błędu</h2>
+<ul>
+  <li><strong>Przeliczenie.</strong> Wynik przeliczamy na skalę o średniej 100 i odchyleniu standardowym 15 względem grupy porównawczej.</li>
+  <li><strong>Przedział 95%.</strong> Pokazujemy go zawsze, bo pojedyncza liczba sugeruje dokładność, której nie ma. Przedział łączy dwa źródła niepewności:
+    <ul>
+      <li>błąd pomiaru, czyli to, że ta sama osoba w innym dniu wypadłaby trochę inaczej (liczymy go z rzetelności testu w naszej próbie);</li>
+      <li>niepewność norm, czyli to, że średnią i rozrzut wyników znamy tylko z próby.</li>
+    </ul>
+  </li>
+  <li><strong>Wynik łączny.</strong> To znormalizowana suma wyników z kilku testów. Błędy poszczególnych testów częściowo się znoszą, więc każdy kolejny test zawęża przedział. Na razie zakładamy, jak bardzo testy są ze sobą powiązane. Zastąpimy to wartościami z danych, gdy będziemy mieć wyniki tych samych osób z kilku testów.</li>
+</ul>
+
+<h2>Czego te testy nie mówią</h2>
+<ul>
+  <li>Nie służą do diagnozy (np. niepełnosprawności intelektualnej, ADHD, otępienia) ani do decyzji o edukacji, zatrudnieniu czy leczeniu.</li>
+  <li>Wynik zależy od warunków: zmęczenia, hałasu, urządzenia, znajomości podobnych zadań. Test online tego nie kontroluje.</li>
+  <li>Zdolności poznawcze to nie wszystko, co ważne w życiu. Wynik nie mówi nic o wartości człowieka, wiedzy, wytrwałości ani umiejętnościach społecznych.</li>
+  <li>Wynik w słownictwie i ciągach zależy też od języka i nawyków (czytanie, liczenie), więc porównywanie osób z różnym doświadczeniem językowym nie ma sensu.</li>
+</ul>
+
+<h2>Dalsze kroki</h2>
+<p>Gdy zbierzemy więcej danych, zbadamy jakość zadań (trudność, moc różnicującą, rzetelność) i wymienimy słabe zadania w nowych wersjach testów. Od około 500–1000 osób na wersję testu planujemy kalibrację zadań modelem teorii odpowiedzi na pozycje testowe (2PL). Ten próg wynika z naszej symulacji, którą opisujemy w dokumentacji projektu.</p>
+</main>
+<footer><div class="wrap">
+  <nav class="footnav"><a href="../metodologia/">Metodologia</a> · <a href="../prywatnosc/">Prywatność</a> · <a href="../zrodla/">Źródła</a></nav>
+</div></footer>
+</body>
+</html>

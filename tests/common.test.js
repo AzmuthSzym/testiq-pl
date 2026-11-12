@@ -57,3 +57,10 @@ test('norma: grupa wieku, jeśli ma dość osób, inaczej cała próba', () => {
   assert.strictEqual(T.normFor(norms, year - 35).mean, 10, 'grupa 30-39 za mała');
   assert.strictEqual(T.normFor(norms, null).mean, 10);
 });
+
+test('osoby poniżej 16 lat: wynik nie jest wysyłany', () => {
+  const y = new Date().getFullYear();
+  assert.strictEqual(T.tooYoung({ birthYear: y - 15 }), true);
+  assert.strictEqual(T.tooYoung({ birthYear: y - 16 }), false);
+  assert.strictEqual(T.tooYoung({ birthYear: null }), false);
+});

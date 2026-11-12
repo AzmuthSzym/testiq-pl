@@ -8,7 +8,12 @@ NET=testiq-e2e
 OUT="$ROOT/tests/e2e/out"
 mkdir -p "$OUT"
 
-cleanup() { docker rm -f testiq-e2e-api testiq-e2e-site >/dev/null 2>&1 || true; docker network rm $NET >/dev/null 2>&1 || true; }
+cleanup() {
+  docker rm -f testiq-e2e-api testiq-e2e-site >/dev/null 2>&1 || true
+  docker network rm $NET >/dev/null 2>&1 || true
+  # zrzuty ekranu należą do użytkownika, a nie do roota z kontenera
+  docker run --rm -v "$OUT:/out" python:3.12-slim chown -R "$(id -u):$(id -g)" /out >/dev/null 2>&1 || true
+}
 trap cleanup EXIT
 cleanup
 docker network create $NET >/dev/null

@@ -15,7 +15,7 @@ Trudność (pasmo 1–4) zależy od częstości słowa docelowego: im rzadsze, t
 
 Uruchomienie (w Dockerze, bez instalowania niczego na serwerze):
   docker run --rm -v "$PWD/vocab:/vocab" python:3.12-slim sh -c \\
-    "pip install -q wordfreq==3.1.1 && python /vocab/build_candidates.py"
+    "pip install -q wordfreq==3.1.1 && python /vocab/build_candidates.py && chown -R $(id -u):$(id -g) /vocab"
 """
 
 import csv
