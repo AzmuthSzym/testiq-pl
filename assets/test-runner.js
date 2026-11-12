@@ -21,8 +21,11 @@
   //   exampleFeedback(choice, correct, item) => tekst po odpowiedzi w przykładzie
   //   levelOf(item)          poziom trudności (do tabeli wyników)
   //   levelLabel(level)      opis poziomu w tabeli
-  //   shouldStop(responses, items, next)  true = koniec testu przed `next`
-  //                          (np. reguła przerwania w teście pamięci)
+  //   nextIndex(responses, items, next)  indeks zadania do pokazania zamiast
+  //                          `next` (np. pominięcie reszty części po regule
+  //                          przerwania); items.length = koniec testu
+  //   summary(r, items)      dodatkowy HTML pod wynikiem (albo '')
+  //   fastMs                 próg „podejrzanie szybkiej” odpowiedzi (0 = bez ostrzeżenia)
   //   chanceNote             zdanie o wyniku przy zgadywaniu (albo '')
   //   meaning                HTML sekcji „Co ten wynik znaczy”
   //   maxScore               maksymalna liczba punktów (domyślnie liczba zadań)
@@ -86,7 +89,8 @@
 
       function show() {
         if (finished) return;
-        if (idx >= items.length || (config.shouldStop && config.shouldStop(responses, items, idx))) {
+        if (config.nextIndex) idx = config.nextIndex(responses, items, idx);
+        if (idx >= items.length) {
           finish(false);
           return;
         }
@@ -141,13 +145,15 @@
         return `<tr><td>${config.levelLabel(lv)}</td><td>${ok} / ${total}</td><td>${ms === null ? '—' : ms.toString().replace('.', ',') + ' s'}</td></tr>`;
       }).join('');
       const answered = r.responses.length;
-      const fast = r.responses.filter((x) => x.ms < 1500).length;
+      const fastMs = config.fastMs === undefined ? 1500 : config.fastMs;
+      const fast = fastMs ? r.responses.filter((x) => x.ms < fastMs).length : 0;
       h(`
         <div class="kicker">Wynik</div>
         <h1>${config.title}</h1>
         <div class="card">
           <div class="score">${score} <span class="note">/ ${maxScore}</span></div>
           <p class="note">${config.chanceNote || ''}${r.timedOut ? ` Skończył się czas (odpowiedzi: ${answered} z ${items.length}).` : ''}</p>
+          ${config.summary ? config.summary(r, items) : ''}
           ${fast >= 5 ? `<p class="note">${fast} odpowiedzi padło w mniej niż 1,5 sekundy. Taki wynik może nie odzwierciedlać twoich możliwości.</p>` : ''}
         </div>
         <table class="res">

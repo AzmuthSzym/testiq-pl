@@ -253,6 +253,38 @@ def main():
         check(width <= 360, f"ciągi: bez przewijania w poziomie na 360 px ({width}px)")
         ctx.close()
 
+        # 9. Pamięć robocza: cyfry pokazywane po kolei, odpowiedź, reguła przerwania.
+        ctx, page, errors = new_page(browser, viewport={"width": 1000, "height": 900})
+        page.goto(f"{SITE}/pamiec/")
+        page.wait_for_selector("#example .digit-stage.on", timeout=5000)
+        page.screenshot(path="/out/pamiec-cyfra.png", full_page=True)
+        page.wait_for_selector("#dig-ex", timeout=10000)
+        ex = page.evaluate("MemoryCore.generateItems('pamiec-przyklad')[0].answer")
+        for d in ex:
+            page.click(f"#example .keypad [data-d='{d}']")
+        page.click("#example .keypad button[type=submit]")
+        check(page.text_content("#exnote").startswith("Dobrze"), "pamięć: przykład z klawiatury ekranowej")
+        page.check("#consent")
+        page.click("#start")
+        items = page.evaluate("MemoryCore.generateItems('pamiec-v1').map(i => i.answer)")
+        # część 1: długości 3–5 dobrze, 6 obie źle -> przeskok do części 2;
+        # część 2: długość 2 dobrze, 3 obie źle -> koniec
+        plan = {0: True, 1: True, 2: True, 3: True, 4: True, 5: True, 6: False, 7: False, 14: True, 15: True, 16: False, 17: False}
+        seen = []
+        for idx, ok in plan.items():
+            page.wait_for_function(f"document.getElementById('count') && document.getElementById('count').textContent === 'Zadanie {idx + 1} z 28'", timeout=20000)
+            seen.append(idx)
+            page.wait_for_selector("#dig-test", timeout=20000)
+            page.fill("#dig-test", items[idx] if ok else "1")
+            page.press("#dig-test", "Enter")
+        page.wait_for_selector("#compare >> text=Zbieramy dane", timeout=20000)
+        txt = page.text_content("main")
+        check("w przód 5" in txt and "wspak 2" in txt, "pamięć: zakresy 5 i 2 po regule przerwania")
+        check(page.text_content(".score").strip().startswith("8"), f"pamięć: wynik 8 ({page.text_content('.score').strip()})")
+        page.screenshot(path="/out/pamiec-wynik.png", full_page=True)
+        check(not errors, f"pamięć: bez błędów JS: {errors}")
+        ctx.close()
+
         browser.close()
     print("E2E " + ("PASSED" if not failures else f"FAILED ({len(failures)})"))
     sys.exit(1 if failures else 0)

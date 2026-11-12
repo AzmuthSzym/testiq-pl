@@ -188,3 +188,19 @@ svg.mcell { width: 100%; height: auto; display: block; aspect-ratio: 1; }
 @media (max-width: 520px) {
   .series .term { font-size: 20px; min-width: 44px; padding: 4px 6px; }
 }
+
+/* pamięć robocza */
+.digit-stage {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  min-height: 180px; margin-bottom: 14px; background: var(--paper); border: 1px solid var(--line);
+  font-family: 'Inter', system-ui, sans-serif; font-size: 18px; color: var(--muted);
+}
+.digit-stage.on { font-size: 96px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.digit-stage.prompt { min-height: 60px; color: var(--ink); }
+.digits-input { letter-spacing: .3em; text-align: center; width: 220px !important; }
+.keypad { display: grid; grid-template-columns: repeat(3, 64px); gap: 8px; justify-content: center; flex-basis: 100%; margin-top: 6px; }
+.keypad button {
+  font-family: 'Inter', system-ui, sans-serif; font-size: 22px; height: 52px;
+  background: var(--paper); color: var(--ink); border: 1px solid var(--control); cursor: pointer;
+}
+.keypad button.btn { font-size: 13px; background: var(--accent); color: var(--on-accent); border: 0; }

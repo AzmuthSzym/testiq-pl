@@ -29,8 +29,10 @@ class Response(BaseModel):
     moves: Optional[int] = Field(default=None, ge=0, le=50)
     # wybór (indeks) albo wpisana odpowiedź
     choice: Optional[Union[int, str]] = None
-    # długość sekwencji / poziom trudności
+    # poziom trudności albo część testu
     level: Optional[int] = Field(default=None, ge=0, le=100)
+    # pamięć robocza: długość ciągu cyfr
+    span: Optional[int] = Field(default=None, ge=1, le=20)
 
     @field_validator("choice")
     @classmethod

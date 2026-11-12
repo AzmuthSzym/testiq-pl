@@ -233,6 +233,35 @@ Liczenie zawęża wybór na poziomach 2–4 mniej więcej do dwóch opcji, ale o
 - **Naiwne przedłużenie** („powtórz ostatnią różnicę”) działa poza ciągami arytmetycznymi w mniej niż 1% zadań.
 - **Wszystkie liczby są całkowite, |x| ≤ 999.** Ciąg ma co najmniej 4 różne wartości.
 
+### 3.3 Pamięć robocza — zrobione (`pamiec/`, `pamiec-v1`)
+
+**Wybór materiału: cyfry, a nie pozycje na siatce.**
+- Cyfry są prostsze w obsłudze na telefonie: wpisuje się je, a nie odtwarza dotykiem z wyczuciem czasu.
+- Mają dobrze opisaną procedurę (powtarzanie w przód i wspak).
+- Test pozycji na siatce (typu bloków Corsiego) to dobry kandydat na osobny test przestrzennej pamięci roboczej później.
+
+**Procedura:**
+- **Część 1:** odtworzenie cyfr w tej samej kolejności, długości 3–9.
+- **Część 2:** odtworzenie cyfr od końca, długości 2–8.
+- **Próby:** po 2 na długość, łącznie 28 możliwych.
+- **Reguła przerwania:** dwie błędne próby na jednej długości kończą część (`nextIndex` w silniku testów).
+- **Pokazywanie cyfr:** 1 cyfra na sekundę (800 ms widoczna, 200 ms przerwy).
+- **Odpowiedź:** wpisywana z klawiatury albo klawiatury ekranowej, limit 30 s na odpowiedź. Czas reakcji liczony od końca pokazywania.
+
+**Ciągi:**
+- cyfry 1–9 bez powtórzeń;
+- bez trzech kolejnych rosnących lub malejących o 1 (np. 3-4-5), bo takie łatwo zapamiętać jako całość;
+- żaden ciąg się w teście nie powtarza.
+
+**Wynik:** liczba poprawnych prób oraz zakres pamięci w każdej części (najdłuższy poprawnie odtworzony ciąg). Ostrzeżenie o „podejrzanie szybkich odpowiedziach” jest tu wyłączone, bo krótkie ciągi wpisuje się szybko.
+
+**Ograniczenie:** procedura odbywa się w przeglądarce bez kontroli warunków. Nie wiemy, czy ktoś nie zapisuje cyfr. Instrukcja o to prosi, a analiza (etap 4) powinna szukać nieprawdopodobnych wzorców, np. bezbłędnych 9 cyfr wspak przy słabej części 1.
+
+**Testy:**
+- `tests/memory.test.js`: układ, cyfry, klucz, reguła przerwania, zakres.
+- W przeglądarce: przykład z klawiatury ekranowej, przejście z przerwaniem obu części, zapis w API.
+- API przyjmuje nowe pole `span` (długość ciągu).
+
 ## Pytania i decyzje do podjęcia
 
 1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:
