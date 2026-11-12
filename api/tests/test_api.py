@@ -78,6 +78,10 @@ def test_rejects_without_consent(client):
     lambda b: b["meta"].update(birthYear=1800),
     lambda b: b["meta"].update(birthYear=datetime.now().year - 15),  # poniżej 16 lat
     lambda b: b["meta"].update(education="doktorat-z-kosmosu"),
+    lambda b: b["meta"].update(sex="x"),
+    lambda b: b["meta"].update(nativeLang="niemiecki"),  # tylko „pl” albo „inny”
+    lambda b: b["meta"].update(country="DE"),
+    lambda b: b["meta"].update(nationality="polska"),  # narodowości nie zbieramy
     lambda b: b["meta"].update(email="ktos@example.com"),  # nadmiarowe dane osobowe
     lambda b: b.update(ip="1.2.3.4"),
     lambda b: b["responses"][0].update(item=21),
@@ -204,3 +208,43 @@ def test_backup(tmp_path, client):
     backup_once(client.db_path, str(backup_dir), keep=2)
     assert len(os.listdir(backup_dir)) == 2
     assert not (backup_dir / "results-2020-01-01.db").exists()
+
+
+def test_stores_sex_language_country(client):
+    body = make_result()
+    body["meta"].update(sex="k", nativeLang="inny", country="pl")
+    assert post(client, body).status_code == 201
+    row = sqlite3.connect(client.db_path).execute("SELECT sex, native_lang, country FROM results").fetchone()
+    assert row == ("k", "inny", "pl")
+
+
+def test_old_database_gets_new_columns(tmp_path):
+    path = str(tmp_path / "old.db")
+    conn = sqlite3.connect(path)
+    conn.executescript("""CREATE TABLE results (id INTEGER PRIMARY KEY AUTOINCREMENT, test TEXT NOT NULL,
+        participant TEXT NOT NULL, started_at TEXT NOT NULL, received_on TEXT NOT NULL,
+        duration_ms INTEGER NOT NULL, timed_out INTEGER NOT NULL, birth_year INTEGER, education TEXT,
+        score INTEGER NOT NULL, n_responses INTEGER NOT NULL, responses TEXT NOT NULL,
+        UNIQUE (test, participant, started_at));
+        INSERT INTO results VALUES (1,'kostka-v1','p1','2026-01-01T00:00:00+00:00','2026-01-01',1,0,1990,NULL,5,20,'[]');""")
+    conn.close()
+    app = create_app(db_path=path, trust_proxy=True, rate_limit=1000)
+    with TestClient(app) as c:
+        body = make_result()
+        body["meta"]["sex"] = "m"
+        assert post(c, body).status_code == 201
+    rows = sqlite3.connect(path).execute("SELECT score, sex FROM results ORDER BY id").fetchall()
+    assert rows == [(5, None), (10, "m")]
+
+
+def test_language_test_norms_only_native_speakers(client):
+    def vocab(pid, correct, lang):
+        return {"test": "slownictwo-v1", "version": 1, "participant": pid,
+                "startedAt": "2026-11-12T10:00:00Z", "durationMs": 300000, "timedOut": False,
+                "meta": {"nativeLang": lang, "consent": True},
+                "responses": [{"item": i + 1, "choice": 0, "correct": i < correct, "ms": 5000} for i in range(20)]}
+    assert post(client, vocab("participant-pl-1", 15, "pl")).status_code == 201
+    assert post(client, vocab("participant-xx-1", 3, "inny")).status_code == 201
+    assert post(client, vocab("participant-nn-1", 13, None)).status_code == 201
+    norms = client.get("/api/norms/slownictwo-v1").json()
+    assert norms["n"] == 2 and norms["mean"] == 14

@@ -63,6 +63,13 @@ płatnościami.
   - bez IP i bez danych kontaktowych;
   - prawdopodobnie tak (identyfikator w przeglądarce), więc stosujemy RODO w
     całości. Do potwierdzenia.
+- [ ] ⚖️ **Płeć, język ojczysty, kraj zamieszkania** (dodane 2026-11-12):
+  - wszystkie nieobowiązkowe, z odpowiedziami zgrubnymi (język: polski / inny,
+    kraj: Polska / inny); narodowości celowo nie zbieramy (mogłaby ujawniać
+    pochodzenie etniczne, art. 9);
+  - czy połączenie rok urodzenia + wykształcenie + płeć + kraj nie zwiększa
+    zbytnio ryzyka identyfikacji (szczególnie przy kraju „inny” i rzadkich
+    kombinacjach)? Statystyki grup pokazujemy od 30 osób.
 - [ ] ⚖️ **Wiek zgody:**
   - Strona i serwer odrzucają wyniki osób poniżej 16 lat, jeśli podały rok
     urodzenia. Jeśli nie podały, polegamy na oświadczeniu w treści zgody.

@@ -41,6 +41,9 @@ def play_cube(page, correct_count, consent=True, keyboard=False):
     if consent:
         page.check("#consent")
     page.fill("#by", "1990")
+    page.select_option("#sex", "k")
+    page.select_option("#lang", "pl")
+    page.select_option("#country", "pl")
     page.click("#start")
     answers = page.evaluate("CubeCore.generateItems('kostka-v2', 20, {version: 2}).map(i => i.answer)")
     for i, ans in enumerate(answers):
@@ -92,9 +95,14 @@ def main():
         ctx, page, errors = new_page(browser, viewport={"width": 1000, "height": 900})
         page.goto(f"{SITE}/kostka/")
         page.screenshot(path="/out/kostka-intro-desktop.png", full_page=True)
+        posted = []
+        page.on("request", lambda r: r.method == "POST" and posted.append(json.loads(r.post_data)))
         play_cube(page, 12)
         page.wait_for_selector("#compare >> text=Zbieramy dane")
         check("na razie: 1" in page.inner_text("#compare"), "pierwszy wynik zapisany w API")
+        meta = posted[0]["meta"] if posted else {}
+        check(meta.get("sex") == "k" and meta.get("nativeLang") == "pl" and meta.get("country") == "pl",
+              f"płeć, język i kraj wysłane: {meta}")
         page.screenshot(path="/out/kostka-wynik-malo-danych.png", full_page=True)
         check(not errors, f"bez błędów JS: {errors}")
         ctx.close()

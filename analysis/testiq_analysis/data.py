@@ -21,7 +21,15 @@ class TestData:
     choices: list               # osoby × zadania: wybrana opcja / wpisana odpowiedź (albo None)
     birth_year: np.ndarray      # nan = nie podano
     education: list
+    sex: list                   # "k" / "m" / "inna" / None
+    native_lang: list           # "pl" / "inny" / None
+    country: list               # "pl" / "inny" / None
     timed_out: np.ndarray
+
+
+def _col(row, name):
+    """Kolumna, której może nie być w starszej bazie."""
+    return row[name] if name in row.keys() else None
 
 
 def load(db_path: str, test: str, n_items: int) -> TestData:
@@ -53,6 +61,9 @@ def load(db_path: str, test: str, n_items: int) -> TestData:
         choices=choices,
         birth_year=np.array([row["birth_year"] if row["birth_year"] is not None else np.nan for row in rows], float),
         education=[row["education"] for row in rows],
+        sex=[_col(row, "sex") for row in rows],
+        native_lang=[_col(row, "native_lang") for row in rows],
+        country=[_col(row, "country") for row in rows],
         timed_out=np.array([bool(row["timed_out"]) for row in rows]),
     )
 
@@ -62,11 +73,13 @@ def export_csv(data: TestData, path: str) -> None:
     w postaci oryginalnej: numer porządkowy wystarcza do analiz)."""
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["osoba", "zadanie", "poprawna", "czas_ms", "wybor", "rok_urodzenia", "wyksztalcenie"])
+        w.writerow(["osoba", "zadanie", "poprawna", "czas_ms", "wybor", "rok_urodzenia", "wyksztalcenie",
+                    "plec", "jezyk_ojczysty", "kraj"])
         for i in range(len(data.participants)):
             for j in range(data.responses.shape[1]):
                 if np.isnan(data.responses[i, j]):
                     continue
                 by = "" if np.isnan(data.birth_year[i]) else int(data.birth_year[i])
                 w.writerow([i + 1, j + 1, int(data.responses[i, j]), int(data.times_ms[i, j]),
-                            data.choices[i][j], by, data.education[i] or ""])
+                            data.choices[i][j], by, data.education[i] or "",
+                            data.sex[i] or "", data.native_lang[i] or "", data.country[i] or ""])

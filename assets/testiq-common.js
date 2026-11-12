@@ -128,6 +128,28 @@
         <option value="wyzsze">wyższe</option>
       </select>
     </label>
+    <label class="field">Płeć
+      <select id="sex">
+        <option value="">— wolę nie podawać —</option>
+        <option value="k">kobieta</option>
+        <option value="m">mężczyzna</option>
+        <option value="inna">inna</option>
+      </select>
+    </label>
+    <label class="field">Czy polski jest twoim językiem ojczystym?
+      <select id="lang">
+        <option value="">— wolę nie podawać —</option>
+        <option value="pl">tak</option>
+        <option value="inny">nie</option>
+      </select>
+    </label>
+    <label class="field">Kraj zamieszkania
+      <select id="country">
+        <option value="">— wolę nie podawać —</option>
+        <option value="pl">Polska</option>
+        <option value="inny">inny</option>
+      </select>
+    </label>
     <label class="check"><input type="checkbox" id="consent">
       <span>Mam ukończone 16 lat i zgadzam się na anonimowe wykorzystanie moich odpowiedzi do opracowania norm testu (<a href="../prywatnosc/">zasady prywatności</a>). Bez zgody wynik zostaje tylko w tej przeglądarce.</span></label>`;
 
@@ -136,6 +158,9 @@
     return {
       birthYear: by >= 1920 && by <= 2020 ? by : null,
       education: document.getElementById('edu').value || null,
+      sex: document.getElementById('sex').value || null,
+      nativeLang: document.getElementById('lang').value || null,
+      country: document.getElementById('country').value || null,
       consent: document.getElementById('consent').checked,
     };
   }

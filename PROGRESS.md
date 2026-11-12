@@ -426,3 +426,20 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
 4. **Przegląd kandydatów do testu słownictwa.** Plik `vocab/kandydaci/kandydaci.tsv` jest na VPS-ie (`~/projects/testiq-pl/vocab/kandydaci/`). Potrzeba co najmniej 5 zatwierdzonych zadań na pasmo, a najlepiej po 10–15, żeby mieć zapas na wymianę słabych zadań po analizie. Po przeglądzie: `python3 vocab/approve.py`. Zatwierdzone zadania staną się publiczne przy scaleniu do `main`.
 5. **Licencja share-alike (wordfreq, CC BY-SA 4.0).** Pasma trudności wyliczamy z danych wordfreq. Czy lista zadań z pasmami jest „utworem zależnym” bazy, który też musi być na CC BY-SA? To pytanie prawne (LEGAL-TODO.md). Bezpieczna alternatywa: publikować zadania bez informacji o częstości (pasmo tylko jako kolejność), albo wyznaczać pasma z własnych danych o trudności (etap 4), gdy je zbierzemy.
 6. **Wypchnięcie gałęzi na GitHub.** Commity są tylko lokalnie. Wypchnięcie gałęzi `rozbudowa` (bez scalania do `main`) nie zmienia strony, ale repozytorium jest publiczne, więc kod i dokumentacja (w tym LEGAL-TODO.md i szkic polityki) staną się widoczne.
+
+## Zmiany po etapie 5
+
+- **2026-11-12: estymacja IQ od 30 uczestników** (na prośbę właściciela), opis w 4.3.
+- **2026-11-12: nowe pytania w formularzu** (na prośbę właściciela): płeć (k / m / inna),
+  czy polski jest językiem ojczystym (tak / nie), kraj zamieszkania (Polska / inny).
+  Wszystkie nieobowiązkowe.
+  - **Po co:** płeć do sprawdzania stronniczości zadań (DIF), nie do osobnych norm;
+    język do norm testu słownictwa (API liczy je tylko dla osób z polskim jako językiem
+    ojczystym albo bez odpowiedzi); kraj do oddzielenia wyników z Polski w analizie.
+  - **Narodowość celowo pominięta:** mało mówi o wyniku, a może ujawniać pochodzenie
+    etniczne (RODO art. 9). Zamiast niej język ojczysty i kraj.
+  - Odpowiedzi tylko zgrubne, żeby nie zwiększać ryzyka identyfikacji.
+  - Baza: nowe kolumny `sex`, `native_lang`, `country`, dopisywane automatycznie
+    do istniejącej bazy (test migracji w `test_api.py`).
+  - **Do zrobienia przy danych:** w analizie DIF według płci (np. Mantel–Haenszel)
+    i porównanie norm Polska / inny kraj.

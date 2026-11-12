@@ -6,6 +6,11 @@ from typing import Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 EDUCATION = Literal["podstawowe", "zawodowe", "srednie", "wyzsze-w-trakcie", "wyzsze"]
+SEX = Literal["k", "m", "inna"]
+# Język ojczysty i kraj: tylko „polski / inny” i „Polska / inny”. Dokładniejsze
+# odpowiedzi nie są potrzebne do norm, a zwiększałyby ryzyko identyfikacji.
+NATIVE_LANG = Literal["pl", "inny"]
+COUNTRY = Literal["pl", "inny"]
 
 
 # Zgody w RODO (w Polsce) może udzielić osoba, która ukończyła 16 lat.
@@ -17,6 +22,9 @@ class Meta(BaseModel):
 
     birthYear: Optional[int] = Field(default=None, ge=1900)
     education: Optional[EDUCATION] = None
+    sex: Optional[SEX] = None
+    nativeLang: Optional[NATIVE_LANG] = None
+    country: Optional[COUNTRY] = None
     consent: bool
 
 

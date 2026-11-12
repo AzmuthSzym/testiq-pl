@@ -117,7 +117,7 @@ def create_app(
         now = time.monotonic()
         if cached and now - cached[0] < NORMS_CACHE_SECONDS:
             return cached[1]
-        attempts = app.state.db.first_attempts(test)
+        attempts = app.state.db.first_attempts(test, native_only=spec.get("language", False))
         stats = summarize([a["score"] for a in attempts], spec["max_score"])
         stats.update({
             "reliability": kr20(attempts, spec["items"]),

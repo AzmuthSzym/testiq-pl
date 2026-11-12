@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS results (
     timed_out     INTEGER NOT NULL,
     birth_year    INTEGER,
     education     TEXT,
+    sex           TEXT,
+    native_lang   TEXT,
+    country       TEXT,
     score         INTEGER NOT NULL,
     n_responses   INTEGER NOT NULL,
     responses     TEXT    NOT NULL,          -- JSON
@@ -34,6 +37,11 @@ class Database:
         if path != ":memory:":
             self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.executescript(SCHEMA)
+        # Baza sprzed dodania płci, języka i kraju: dopisz brakujące kolumny.
+        cols = {r[1] for r in self._conn.execute("PRAGMA table_info(results)")}
+        for col in ("sex", "native_lang", "country"):
+            if col not in cols:
+                self._conn.execute(f"ALTER TABLE results ADD COLUMN {col} TEXT")
         self._conn.commit()
 
     def insert_result(self, r, score: int) -> bool:
@@ -47,6 +55,9 @@ class Database:
             int(r.timedOut),
             r.meta.birthYear,
             r.meta.education,
+            r.meta.sex,
+            r.meta.nativeLang,
+            r.meta.country,
             score,
             len(r.responses),
             json.dumps([x.model_dump(exclude_none=True) for x in r.responses], separators=(",", ":")),
@@ -54,21 +65,26 @@ class Database:
         with self._lock:
             cur = self._conn.execute(
                 """INSERT OR IGNORE INTO results (test, participant, started_at, received_on,
-                   duration_ms, timed_out, birth_year, education, score, n_responses, responses)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                   duration_ms, timed_out, birth_year, education, sex, native_lang, country,
+                   score, n_responses, responses)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 row,
             )
             self._conn.commit()
             return cur.rowcount == 1
 
-    def first_attempts(self, test: str) -> list[dict]:
+    def first_attempts(self, test: str, native_only: bool = False) -> list[dict]:
         """Pierwsze podejście każdego uczestnika (kolejne podejścia są zawyżone
         przez efekt treningu, więc nie trafiają do norm): wynik, wiek w chwili
-        zgłoszenia (jeśli podano rok urodzenia) i odpowiedzi 0/1 na zadania."""
+        zgłoszenia (jeśli podano rok urodzenia) i odpowiedzi 0/1 na zadania.
+
+        native_only: pomija osoby, które podały inny język ojczysty niż polski
+        (dla testów językowych; brak odpowiedzi traktujemy jak polski)."""
+        lang = "AND (native_lang IS NULL OR native_lang = 'pl')" if native_only else ""
         with self._lock:
             rows = self._conn.execute(
-                """SELECT score, birth_year, received_on, responses FROM results WHERE id IN (
-                       SELECT MIN(id) FROM results WHERE test = ? GROUP BY participant)""",
+                f"""SELECT score, birth_year, received_on, responses FROM results WHERE id IN (
+                       SELECT MIN(id) FROM results WHERE test = ? GROUP BY participant) {lang}""",
                 (test,),
             ).fetchall()
         out = []
