@@ -1,0 +1,176 @@
+import copy
+import json
+import os
+import sqlite3
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.backup import backup_once
+from app.main import MAX_BODY_BYTES, create_app
+from app.norms import summarize
+from app.ratelimit import RateLimiter
+
+ORIGIN = "https://azmuthszym.github.io"
+
+
+def make_result(participant="11111111-2222-3333-4444-555555555555", correct=10, started="2026-11-12T10:00:00Z"):
+    responses = [
+        {"item": i + 1, "moves": 1 + i // 5, "choice": 0, "correct": i < correct, "ms": 5000}
+        for i in range(20)
+    ]
+    return {
+        "test": "kostka-v1", "version": 1, "participant": participant,
+        "startedAt": started, "durationMs": 300000, "timedOut": False,
+        "meta": {"birthYear": 1990, "education": "wyzsze", "consent": True},
+        "responses": responses,
+    }
+
+
+@pytest.fixture
+def client(tmp_path):
+    app = create_app(db_path=str(tmp_path / "t.db"), trust_proxy=True, rate_limit=1000)
+    with TestClient(app) as c:
+        c.db_path = str(tmp_path / "t.db")
+        yield c
+
+
+def post(client, body, ip="1.2.3.4", **headers):
+    return client.post("/api/results", content=json.dumps(body),
+                       headers={"Content-Type": "application/json", "X-Real-IP": ip, **headers})
+
+
+def test_health(client):
+    assert client.get("/api/health").json() == {"ok": True}
+
+
+def test_stores_valid_result(client):
+    r = post(client, make_result())
+    assert r.status_code == 201
+    assert r.json() == {"stored": True, "duplicate": False}
+    rows = sqlite3.connect(client.db_path).execute("SELECT score, birth_year, received_on FROM results").fetchall()
+    assert rows[0][0] == 10 and rows[0][1] == 1990
+    assert len(rows[0][2]) == 10  # tylko data, bez godziny
+
+
+def test_duplicate_is_not_stored_twice(client):
+    post(client, make_result())
+    r = post(client, make_result())
+    assert r.status_code == 201 and r.json()["duplicate"] is True
+    assert client.get("/api/norms/kostka-v1").json()["n"] == 1
+
+
+def test_rejects_without_consent(client):
+    body = make_result()
+    body["meta"]["consent"] = False
+    r = post(client, body)
+    assert r.status_code == 422
+    assert sqlite3.connect(client.db_path).execute("SELECT COUNT(*) FROM results").fetchone()[0] == 0
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda b: b.pop("responses"),
+    lambda b: b.update(test="nieznany-test"),
+    lambda b: b.update(test="Kostka V1!"),
+    lambda b: b.update(participant="x"),
+    lambda b: b.update(durationMs=-5),
+    lambda b: b["meta"].update(birthYear=1800),
+    lambda b: b["meta"].update(education="doktorat-z-kosmosu"),
+    lambda b: b["meta"].update(email="ktos@example.com"),  # nadmiarowe dane osobowe
+    lambda b: b.update(ip="1.2.3.4"),
+    lambda b: b["responses"][0].update(item=21),
+    lambda b: b["responses"][1].update(item=1),  # powtórzone zadanie
+    lambda b: b["responses"][0].update(ms="szybko"),
+    lambda b: b["responses"][0].update(choice="x" * 100),
+    lambda b: b["responses"].extend(copy.deepcopy(b["responses"])),
+])
+def test_rejects_invalid(client, mutate):
+    body = make_result()
+    mutate(body)
+    assert post(client, body).status_code == 422
+
+
+def test_rejects_non_json(client):
+    r = client.post("/api/results", content=b"nie json", headers={"Content-Type": "application/json"})
+    assert r.status_code == 422
+
+
+def test_body_size_limit(client):
+    body = make_result()
+    body["padding"] = "x" * (MAX_BODY_BYTES + 10)
+    r = post(client, body)
+    assert r.status_code == 413
+
+
+def test_rate_limit_per_ip(tmp_path):
+    app = create_app(db_path=str(tmp_path / "r.db"), trust_proxy=True, rate_limit=3)
+    with TestClient(app) as c:
+        codes = [post(c, make_result(participant=f"participant-{i:04d}"), ip="9.9.9.9").status_code
+                 for i in range(4)]
+        assert codes == [201, 201, 201, 429]
+        # inny adres ma własny limit
+        assert post(c, make_result(participant="participant-x001"), ip="8.8.8.8").status_code == 201
+
+
+def test_rate_limiter_does_not_keep_ips_and_rotates_salt():
+    day = ["2026-11-12"]
+    clock = [0.0]
+    lim = RateLimiter(2, 3600, clock=lambda: clock[0], today=lambda: day[0])
+    k1 = lim.key_for("1.2.3.4")
+    assert "1.2.3.4" not in k1 and len(k1) == 64
+    assert lim.allow("1.2.3.4") and lim.allow("1.2.3.4") and not lim.allow("1.2.3.4")
+    assert all("1.2.3.4" not in k for k in lim._hits)
+    clock[0] = 3601
+    assert lim.allow("1.2.3.4"), "okno minęło"
+    day[0] = "2026-11-13"
+    assert lim.key_for("1.2.3.4") != k1, "nowa sól nowego dnia"
+
+
+def test_cors_only_for_github_pages(client):
+    ok = client.options("/api/results", headers={
+        "Origin": ORIGIN, "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type"})
+    assert ok.headers.get("access-control-allow-origin") == ORIGIN
+    bad = client.options("/api/results", headers={
+        "Origin": "https://evil.example", "Access-Control-Request-Method": "POST"})
+    assert bad.headers.get("access-control-allow-origin") is None
+    get = client.get("/api/norms/kostka-v1", headers={"Origin": "https://evil.example"})
+    assert get.headers.get("access-control-allow-origin") is None
+
+
+def test_norms_use_first_attempt_only(client):
+    for i, score in enumerate([5, 10, 15]):
+        post(client, make_result(participant=f"person-{i:04d}", correct=score))
+    # drugie podejście osoby 0 (wyższy wynik) nie liczy się do norm
+    post(client, make_result(participant="person-0000", correct=20, started="2026-11-12T11:00:00Z"))
+    stats = client.get("/api/norms/kostka-v1").json()
+    assert stats["n"] == 3
+    assert stats["mean"] == 10
+    assert stats["sd"] == 5
+    assert stats["distribution"][5] == 1 and stats["distribution"][20] == 0
+    assert len(stats["distribution"]) == 21
+    assert "niereprezentatywna" in stats["sample"]
+
+
+def test_norms_unknown_test(client):
+    assert client.get("/api/norms/nie-ma").status_code == 404
+
+
+def test_summarize_edge_cases():
+    assert summarize([], 3) == {"n": 0, "mean": None, "sd": None, "sem": None, "distribution": [0, 0, 0, 0]}
+    one = summarize([2], 3)
+    assert one["n"] == 1 and one["sd"] is None
+
+
+def test_backup(tmp_path, client):
+    post(client, make_result())
+    backup_dir = tmp_path / "b"
+    target = backup_once(client.db_path, str(backup_dir), keep=2)
+    copy_conn = sqlite3.connect(target)
+    assert copy_conn.execute("SELECT COUNT(*) FROM results").fetchone()[0] == 1
+    copy_conn.close()
+    for name in ["results-2020-01-01.db", "results-2020-01-02.db"]:
+        (backup_dir / name).write_bytes(b"")
+    backup_once(client.db_path, str(backup_dir), keep=2)
+    assert len(os.listdir(backup_dir)) == 2
+    assert not (backup_dir / "results-2020-01-01.db").exists()

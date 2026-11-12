@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+api/data/
+api/backups/
+deploy/data/
+deploy/backups/
+.env
