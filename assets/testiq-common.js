@@ -8,7 +8,7 @@
   // Przeliczenie na skalę IQ: od MIN_N_IQ osób jako „estymacja wstępna”,
   // od MIN_N_NORMS jako wynik względem norm (nadal: próba ochotnicza).
   // Te same progi i wzory co w analysis/testiq_analysis/scoring.py.
-  const MIN_N_IQ = 100, MIN_N_NORMS = 400;
+  const MIN_N_IQ = 30, MIN_N_NORMS = 400;
   const AGE_NOW = new Date().getFullYear();
 
   // IQ (średnia 100, SD 15) względem normy { n, mean, sd } i przedział 95%.

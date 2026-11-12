@@ -200,7 +200,7 @@
       <h2>Na tle innych uczestników</h2>
       <div id="compare"></div>
       <h2>Co ten wynik znaczy</h2>
-      <p>Na razie test nie ma polskich norm, więc nie przeliczamy wyniku na skalę IQ. Gdy zbierzemy wystarczająco dużo odpowiedzi, wynik zostanie porównany z innymi uczestnikami w twoim wieku.</p>
+      <p>Wynik na skali IQ liczymy względem innych uczestników. Wystarczy 30 osób, żeby podać estymację wstępną z przedziałem błędu, który zawęża się z każdą kolejną osobą. Jeśli podasz rok urodzenia, a w twojej grupie wieku jest dość osób, porównujemy cię z rówieśnikami.</p>
       <p><button class="btn ghost" id="dl">Pobierz dane (JSON)</button> <a class="btn ghost" href="../">Wróć</a></p>
     `);
     Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), TEST_ID, score, r.meta));

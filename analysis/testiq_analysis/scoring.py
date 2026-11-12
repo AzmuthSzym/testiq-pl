@@ -14,7 +14,7 @@ import math
 import numpy as np
 
 AGE_BANDS = [(16, 19), (20, 29), (30, 39), (40, 49), (50, 59), (60, 69), (70, 99)]
-MIN_N_PRELIM = 100   # od tylu osób w grupie: estymacja wstępna
+MIN_N_PRELIM = 30    # od tylu osób w grupie: estymacja wstępna (szeroki przedział)
 MIN_N_FINAL = 400    # od tylu: normy (nadal z zastrzeżeniem, że próba nie jest reprezentatywna)
 
 

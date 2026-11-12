@@ -112,7 +112,7 @@ def test_guttman_errors():
 # ---------- IQ i wynik łączny ----------
 
 def test_iq_preliminary_and_ci():
-    norm_small = {"n": 50, "mean": 10, "sd": 3}
+    norm_small = {"n": 20, "mean": 10, "sd": 3}
     assert scoring.to_iq(13, 1.5, norm_small)["status"] == "brak"
     prelim = scoring.to_iq(13, 1.5, {"n": 150, "mean": 10, "sd": 3})
     final = scoring.to_iq(13, 1.5, {"n": 5000, "mean": 10, "sd": 3})

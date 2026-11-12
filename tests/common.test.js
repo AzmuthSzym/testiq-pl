@@ -33,7 +33,7 @@ test('IQ: zgodność z analizą w Pythonie', () => {
 });
 
 test('IQ: za mała próba albo brak rzetelności = brak wyniku', () => {
-  assert.strictEqual(T.toIQ(13, { n: 99, mean: 10, sd: 3 }, 0.8), null);
+  assert.strictEqual(T.toIQ(13, { n: 29, mean: 10, sd: 3 }, 0.8), null);
   assert.strictEqual(T.toIQ(13, { n: 500, mean: 10, sd: 3 }, null), null);
 });
 
@@ -51,7 +51,7 @@ test('wynik łączny: zgodność z analizą w Pythonie, przedział zawęża się
 });
 
 test('norma: grupa wieku, jeśli ma dość osób, inaczej cała próba', () => {
-  const norms = { n: 500, mean: 10, sd: 3, byAge: [{ from: 20, to: 29, n: 150, mean: 11, sd: 2.5 }, { from: 30, to: 39, n: 40, mean: 9, sd: 3 }] };
+  const norms = { n: 500, mean: 10, sd: 3, byAge: [{ from: 20, to: 29, n: 150, mean: 11, sd: 2.5 }, { from: 30, to: 39, n: 20, mean: 9, sd: 3 }] };
   const year = new Date().getFullYear();
   assert.strictEqual(T.normFor(norms, year - 25).mean, 11);
   assert.strictEqual(T.normFor(norms, year - 35).mean, 10, 'grupa 30-39 za mała');

@@ -329,11 +329,12 @@ Kod jest w `analysis/` (Python: numpy, scipy). Uruchamia się w Dockerze przez `
 
 ### 4.3 Skala IQ i normy według wieku — zrobione (`scoring.py`, strona)
 - **Normy:** grupy wieku 16–19, 20–29, …, 70+.
-- **IQ:** 100 + 15·z względem normy grupy, jeśli grupa ma ≥ 100 osób; w przeciwnym razie względem całej próby, co strona mówi wprost.
+- **IQ:** 100 + 15·z względem normy grupy, jeśli grupa ma ≥ 30 osób; w przeciwnym razie względem całej próby, co strona mówi wprost.
 - **Przedział 95%:** łączy błąd pomiaru (SD·√(1−rzetelność)) z niepewnością samej normy, bo średnią i SD znamy tylko z próby (metoda delta). Symulacja w testach sprawdza pokrycie (ok. 95%).
 - **Progi:**
-  - **< 100 osób:** IQ nie podajemy wcale.
-  - **100–399 osób:** „Estymacja wstępna” z wyraźnym ostrzeżeniem, że to nie są polskie normy, a próba składa się z ochotników.
+  - **< 30 osób:** IQ nie podajemy wcale.
+  - **30–399 osób:** „Estymacja wstępna” z wyraźnym ostrzeżeniem, że to nie są polskie normy, a próba składa się z ochotników.
+  - **Decyzja (2026-11-12, na prośbę właściciela):** próg estymacji obniżony ze 100 do 30. Użytkownicy oczekują wyniku IQ, a przedział i tak uwzględnia niepewność norm (przy N=30 i rzetelności 0,8: ok. ±15 pkt zamiast ±13 przy N=100), więc mała próba daje szerszy, uczciwy przedział zamiast braku wyniku.
   - **≥ 400 osób:** „Wynik na skali IQ” z informacją, że próba nie jest reprezentatywna.
 - **API (`GET /api/norms`):** zwraca teraz rzetelność KR-20 (od 30 osób) i statystyki grup wieku (tylko grupy z ≥ 30 osobami). Strona liczy IQ tym samym wzorem co analiza w Pythonie, co sprawdza test na wartościach wzorcowych.
 
