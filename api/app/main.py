@@ -19,6 +19,7 @@ from pydantic import ValidationError
 from .db import Database
 from .models import Result
 from .norms import assisted, by_age, kr20, summarize
+from .scoring import counted
 from .ratelimit import RateLimiter
 from .tests_registry import TESTS
 
@@ -103,7 +104,7 @@ def create_app(
         if len(items) > spec["items"] or len(set(items)) != len(items) or any(i > spec["items"] for i in items):
             raise HTTPException(422, "Odpowiedzi nie pasują do testu.")
 
-        score = sum(1 for r in result.responses if r.correct)
+        score = sum(1 for r in result.responses if counted(r.model_dump()))
         stored = app.state.db.insert_result(result, score)
         app.state.norms_cache.pop(result.test, None)
         return {"stored": stored, "duplicate": not stored}

@@ -40,6 +40,7 @@
         <h1>${config.title}</h1>
         <p class="lead">${config.lead}</p>
         ${config.instructions}
+        ${T.RULES_NOTE}
         ${config.example ? `<h2>Przykład</h2>
           <p class="question" id="exq"></p>
           <div id="example"></div>
@@ -142,13 +143,14 @@
     }
 
     function results(r, items, sent) {
-      const score = r.responses.filter((x) => x.correct).length;
+      const sc = T.scoreOf(config.id, r.responses);
+      const score = sc.points;
       const maxScore = config.maxScore || items.length;
       const levels = [...new Set(items.map(config.levelOf))];
       const rows = levels.map((lv) => {
         const total = items.filter((it) => config.levelOf(it) === lv).length;
         const sub = r.responses.filter((x) => x.level === lv);
-        const ok = sub.filter((x) => x.correct).length;
+        const ok = T.fmtPoints(sub.reduce((a, x) => a + T.pointsFor(config.id, x), 0));
         const ms = sub.length ? Math.round(sub.reduce((a, x) => a + x.ms, 0) / sub.length / 100) / 10 : null;
         return `<tr><td>${config.levelLabel(lv)}</td><td>${ok} / ${total}</td><td>${ms === null ? '—' : ms.toString().replace('.', ',') + ' s'}</td></tr>`;
       }).join('');
@@ -159,7 +161,8 @@
         <div class="kicker">Wynik</div>
         <h1>${config.title}</h1>
         <div class="card">
-          <div class="score">${score} <span class="note">/ ${maxScore}</span></div>
+          <div class="score">${T.fmtPoints(score)} <span class="note">/ ${maxScore}</span></div>
+          ${T.scoreNote(sc)}
           <p class="note">${config.chanceNote || ''}${r.timedOut ? ` Skończył się czas (odpowiedzi: ${answered} z ${items.length}).` : ''}</p>
           ${config.summary ? config.summary(r, items) : ''}
           ${fast >= 5 ? `<p class="note">${fast} odpowiedzi padło w mniej niż 1,5 sekundy. Taki wynik może nie odzwierciedlać twoich możliwości.</p>` : ''}
@@ -174,7 +177,8 @@
         ${config.meaning}
         <p><button class="btn ghost" id="dl">Pobierz dane (JSON)</button> <a class="btn ghost" href="../">Wróć</a></p>
       `);
-      Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), config.id, score, r.meta));
+      if (T.assisted(r.meta)) document.getElementById('compare').innerHTML = T.ASSISTED_NOTE;
+      else Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), config.id, score, r.meta));
       document.getElementById('dl').addEventListener('click', () => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));

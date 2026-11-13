@@ -12,6 +12,9 @@ from dataclasses import dataclass
 import numpy as np
 
 
+AWAY_GRACE_MS = 1000  # te same zasady co api/app/scoring.py
+
+
 @dataclass
 class TestData:
     test: str
@@ -57,7 +60,9 @@ def load(db_path: str, test: str, n_items: int) -> TestData:
             away_ms[i] += r.get("awayMs", 0)
             j = r["item"] - 1
             if 0 <= j < n_items:
-                resp[i, j] = 1.0 if r["correct"] else 0.0
+                # jak na stronie i w API: odpowiedź po wyjściu z karty (≥ 1 s) się nie liczy
+                left = r.get("away") and (r.get("awayMs") or 0) >= AWAY_GRACE_MS
+                resp[i, j] = 1.0 if r["correct"] and not left else 0.0
                 times[i, j] = r["ms"]
                 choices[i][j] = r.get("choice")
     return TestData(

@@ -221,6 +221,60 @@
     };
   }
 
+  // ---------- punktacja: jawne zasady uczciwości ----------
+  // Zasady są opisane w instrukcji każdego testu (RULES_NOTE) i w metodologii,
+  // a ekran wyniku pokazuje, ile odpowiedzi nie zostało policzonych i dlaczego.
+  //  1. Odpowiedź po wyjściu z karty (dłużej niż AWAY_GRACE_MS) nie jest liczona.
+  //  2. (wyłączone do pilotażu) Odpowiedź po bardzo długim namyśle, powyżej
+  //     progu SLOW_RULE.limits[test][poziom], jest liczona za pół punktu.
+  // Te same zasady co w api/app/scoring.py.
+  const AWAY_GRACE_MS = 1000;
+  const SLOW_RULE = {
+    enabled: false,
+    points: 0.5,
+    // test -> poziom -> ms; uzupełnimy z danych pilotażu (np. czas, w którym
+    // mieści się 99% uczciwych odpowiedzi na zadania danego poziomu)
+    limits: {},
+  };
+  const RULES_NOTE = '<p class="rules"><strong>Ważne:</strong> nie wychodź z tej karty ani z przeglądarki w trakcie zadania. Odpowiedzi udzielone po wyjściu z karty nie są liczone do wyniku.</p>';
+
+  function leftTab(r) { return !!(r.away && (r.awayMs || 0) >= AWAY_GRACE_MS); }
+  function slowLimit(testId, r, rule) {
+    const lim = rule.enabled && rule.limits[testId];
+    return lim ? (lim[r.level !== undefined ? r.level : r.moves] || null) : null;
+  }
+  // Punkty za jedną odpowiedź (0, SLOW_RULE.points albo 1).
+  function pointsFor(testId, r, rule) {
+    rule = rule || SLOW_RULE;
+    if (!r.correct || leftTab(r)) return 0;
+    const lim = slowLimit(testId, r, rule);
+    return lim && r.ms > lim ? rule.points : 1;
+  }
+  // Wynik testu: punkty po zasadach + ile poprawnych odpowiedzi nie policzono.
+  function scoreOf(testId, responses, rule) {
+    rule = rule || SLOW_RULE;
+    let points = 0, raw = 0, voided = 0, slow = 0;
+    for (const r of responses) {
+      const p = pointsFor(testId, r, rule);
+      points += p;
+      if (r.correct) raw++;
+      if (r.correct && leftTab(r)) voided++;
+      else if (r.correct && p < 1) slow++;
+    }
+    return { points, raw, voided, slow };
+  }
+  const fmtPoints = (p) => String(Math.round(p * 10) / 10).replace('.', ',');
+  // Zdanie pod wynikiem, jeśli zasady coś zmieniły.
+  function scoreNote(s) {
+    const parts = [];
+    if (s.voided) parts.push(`${s.voided} ${s.voided === 1 ? 'poprawna odpowiedź padła' : 'poprawne odpowiedzi padły'} po wyjściu z karty, więc ich nie liczymy`);
+    if (s.slow) parts.push(`${s.slow} ${s.slow === 1 ? 'odpowiedź' : 'odpowiedzi'} po bardzo długim namyśle liczymy za pół punktu`);
+    return parts.length ? `<p class="note">${parts.join('; ')}. Bez tych zasad: ${s.raw}.</p>` : '';
+  }
+  const ASSISTED = ['ai', 'inna'];
+  function assisted(meta) { return !!(meta && ASSISTED.includes(meta.assist)); }
+  const ASSISTED_NOTE = '<p>Ten test był rozwiązany z pomocą, więc wynik nie mówi o twoich zdolnościach i nie porównujemy go z innymi uczestnikami. Rozwiąż test jeszcze raz samodzielnie, żeby zobaczyć porównanie.</p>';
+
   const ASSIST_OPTIONS = [
     ['nie', 'Nie, wszystko samodzielnie'],
     ['ai', 'Tak, z AI (np. czat albo zdjęcie zadania wysłane do AI)'],
@@ -334,6 +388,6 @@
     });
   }
 
-  root.TestIQ = { MIN_AGE, tooYoung, willSend, focusWatch, askAssist, MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
+  root.TestIQ = { MIN_AGE, tooYoung, willSend, focusWatch, askAssist, AWAY_GRACE_MS, SLOW_RULE, RULES_NOTE, leftTab, pointsFor, scoreOf, fmtPoints, scoreNote, assisted, ASSISTED_NOTE, MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.TestIQ;
 })(typeof window !== 'undefined' ? window : globalThis);

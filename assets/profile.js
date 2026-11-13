@@ -20,13 +20,13 @@
       if (!raw) return null;
       try {
         const r = JSON.parse(raw);
-        return Object.assign({}, t, { score: r.responses.filter((x) => x.correct).length, meta: r.meta || {} });
+        return Object.assign({}, t, { score: T.scoreOf(t.id, r.responses).points, meta: r.meta || {} });
       } catch (e) { return null; }
     }).filter(Boolean);
     if (!done.length) return Promise.resolve();
     el.hidden = false;
     return Promise.all(done.map((t) => T.fetchNorms(t.id).then((norms) => {
-      if (!norms) return t;
+      if (!norms || T.assisted(t.meta)) return t;  // test z pomocą: bez IQ i bez wyniku łącznego
       const norm = T.normFor(norms, t.meta.birthYear);
       return Object.assign(t, { est: T.toIQ(t.score, norm, norms.reliability), reliability: norms.reliability });
     }))).then((rows) => {
@@ -47,8 +47,8 @@
         <p class="note">Na podstawie testów rozwiązanych w tej przeglądarce. Dane nie opuszczają twojego urządzenia, chyba że przy teście wyraziłeś zgodę.</p>
         <table class="res">
           <tr><th>Test</th><th>Wynik</th><th>Na skali IQ</th></tr>
-          ${rows.map((t) => `<tr><td><a href="${t.href}">${t.name}</a></td><td>${t.score}</td>
-            <td>${t.est ? `${t.est.iq} <span class="note">(${t.est.lo}–${t.est.hi})</span>` : '<span class="note">zbieramy dane</span>'}</td></tr>`).join('')}
+          ${rows.map((t) => `<tr><td><a href="${t.href}">${t.name}</a></td><td>${T.fmtPoints(t.score)}</td>
+            <td>${t.est ? `${t.est.iq} <span class="note">(${t.est.lo}–${t.est.hi})</span>` : `<span class="note">${T.assisted(t.meta) ? 'rozwiązany z pomocą' : 'zbieramy dane'}</span>`}</td></tr>`).join('')}
         </table>
         ${summary}`;
     });

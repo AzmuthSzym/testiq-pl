@@ -464,3 +464,16 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
     Spodziewam się: ciągi liczbowe łatwe dla AI, matryce częściowo, kostka (śledzenie
     obrotów z rysunku) trudna. Wynik pokaże, który test najbardziej wymaga ochrony
     (np. krótszy czas na zadanie w nowej wersji).
+- **2026-11-13: jawne zasady punktacji** (decyzja właściciela: uczestnik ma widzieć wynik
+  odpowiadający jego możliwościom, a nie zawyżony przez pomoc):
+  - odpowiedź po wyjściu z karty (≥ 1 s) = 0 pkt; instrukcja każdego testu to mówi
+    (`RULES_NOTE`), ekran wyniku podaje liczbę niepoliczonych odpowiedzi i wynik bez zasad.
+    Te same zasady: `testiq-common.js` (`scoreOf`), `api/app/scoring.py`, `analysis/data.py`;
+  - przyznanie się do pomocy: wynik bez porównania i bez IQ (także w profilu);
+  - **przygotowane, wyłączone:** pół punktu za odpowiedź po bardzo długim namyśle
+    (`SLOW_RULE` w `testiq-common.js`). Do włączenia po pilotażu: progi na poziom = czas, w
+    którym mieści się ok. 99% uczciwych odpowiedzi; dopisać zdanie do `RULES_NOTE`; dodać
+    regułę w `api/app/scoring.py` i zmienić kolumnę `score` na REAL. Zmiana punktacji =
+    nowa wersja testu w normach (inna skala wyniku).
+  - Odrzucona propozycja: ukryta kara za czas (kara dla wolnych uczciwych osób i wynik
+    wprowadzający w błąd; jawna zasada lepiej też odstrasza).

@@ -5,6 +5,8 @@ import sqlite3
 import threading
 from datetime import datetime, timezone
 
+from .scoring import counted
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS results (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,7 +97,7 @@ class Database:
             if row["birth_year"]:
                 age = int(row["received_on"][:4]) - row["birth_year"]
             responses = json.loads(row["responses"])
-            correct = {r["item"]: 1 if r["correct"] else 0 for r in responses}
+            correct = {r["item"]: 1 if counted(r) else 0 for r in responses}
             out.append({
                 "score": row["score"], "age": age, "items": correct, "assist": row["assist"],
                 "away": sum(r.get("away", 0) for r in responses),

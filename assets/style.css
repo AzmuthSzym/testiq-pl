@@ -230,3 +230,6 @@ fieldset.assist label.check:has(input:checked) { border-color: var(--accent); }
 /* treść zadań nie daje się zaznaczyć i skopiować (np. do czatu z AI) */
 #item, #question, .question { -webkit-user-select: none; user-select: none; }
 #item input { -webkit-user-select: text; user-select: text; }
+
+/* zasady uczciwości w instrukcji */
+p.rules { border-left: 3px solid var(--accent); padding: 6px 0 6px 12px; }

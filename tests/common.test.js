@@ -64,3 +64,36 @@ test('osoby poniżej 16 lat: wynik nie jest wysyłany', () => {
   assert.strictEqual(T.tooYoung({ birthYear: y - 16 }), false);
   assert.strictEqual(T.tooYoung({ birthYear: null }), false);
 });
+
+test('punktacja: odpowiedź po wyjściu z karty się nie liczy, krótkie mignięcie tak', () => {
+  const rs = [
+    { item: 1, correct: true, ms: 5000 },
+    { item: 2, correct: true, ms: 5000, away: 1, awayMs: 4000 },
+    { item: 3, correct: true, ms: 5000, away: 1, awayMs: 300 },
+    { item: 4, correct: false, ms: 5000, away: 2, awayMs: 9000 },
+  ];
+  const s = T.scoreOf('kostka-v2', rs);
+  assert.deepStrictEqual(s, { points: 2, raw: 3, voided: 1, slow: 0 });
+  assert.match(T.scoreNote(s), /1 poprawna odpowiedź padła po wyjściu z karty.*Bez tych zasad: 3/);
+  assert.strictEqual(T.scoreNote(T.scoreOf('kostka-v2', [rs[0]])), '');
+});
+
+test('punktacja: reguła długiego namysłu jest wyłączona, a po włączeniu daje pół punktu', () => {
+  assert.strictEqual(T.SLOW_RULE.enabled, false);
+  const rs = [{ item: 1, level: 2, correct: true, ms: 90000 }, { item: 2, level: 2, correct: true, ms: 20000 }];
+  assert.strictEqual(T.scoreOf('matryce-v1', rs).points, 2);
+  const rule = { enabled: true, points: 0.5, limits: { 'matryce-v1': { 2: 60000 } } };
+  const s = T.scoreOf('matryce-v1', rs, rule);
+  assert.deepStrictEqual(s, { points: 1.5, raw: 2, voided: 0, slow: 1 });
+  assert.strictEqual(T.fmtPoints(s.points), '1,5');
+  // kostka: poziom = liczba obrotów
+  assert.strictEqual(T.pointsFor('kostka-v2', { correct: true, moves: 3, ms: 50000 },
+    { enabled: true, points: 0.5, limits: { 'kostka-v2': { 3: 40000 } } }), 0.5);
+});
+
+test('test z pomocą: bez porównania', () => {
+  assert.strictEqual(T.assisted({ assist: 'ai' }), true);
+  assert.strictEqual(T.assisted({ assist: 'inna' }), true);
+  assert.strictEqual(T.assisted({ assist: 'nie' }), false);
+  assert.strictEqual(T.assisted({}), false);
+});

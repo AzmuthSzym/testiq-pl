@@ -88,6 +88,7 @@
       <p>Kostka jest obracana o ćwierć obrotu, krok po kroku, tak jak pokazują strzałki. Ścianka ze strzałką przetacza się w kierunku, w który strzałka wskazuje. Wybierz obrazek, który pokazuje kostkę po wszystkich obrotach.</p>
       <p>Ścianki, których na początku nie widać, są puste. Na obrazkach z odpowiedziami też będą puste.</p>
       <p>Odpowiadasz kliknięciem albo klawiszem A–F. Nie da się wrócić do poprzedniego zadania. Nie odświeżaj strony w trakcie testu: odpowiedzi przepadną.</p>
+      ${T.RULES_NOTE}
       <h2>Przykład</h2>
       <div id="example"></div>
       <p class="note" id="exnote" aria-live="polite">Wybierz odpowiedź, żeby zobaczyć, czy jest poprawna.</p>
@@ -185,10 +186,11 @@
 
   // ---------- ekran 3: wynik ----------
   function results(r, sent) {
-    const score = r.responses.filter((x) => x.correct).length;
+    const sc = T.scoreOf(TEST_ID, r.responses);
+    const score = sc.points;
     const rows = [1, 2, 3, 4].map((m) => {
       const sub = r.responses.filter((x) => x.moves === m);
-      const ok = sub.filter((x) => x.correct).length;
+      const ok = T.fmtPoints(sub.reduce((a, x) => a + T.pointsFor(TEST_ID, x), 0));
       const ms = sub.length ? Math.round(sub.reduce((a, x) => a + x.ms, 0) / sub.length / 100) / 10 : null;
       return `<tr><td>${m} ${m === 1 ? 'obrót' : 'obroty'}</td><td>${ok} / 5</td><td>${ms === null ? '—' : ms + ' s'}</td></tr>`;
     }).join('');
@@ -197,7 +199,8 @@
       <div class="kicker">Wynik</div>
       <h1>Obracanie kostki</h1>
       <div class="card">
-        <div class="score">${score} <span class="note">/ ${N_ITEMS}</span></div>
+        <div class="score">${T.fmtPoints(score)} <span class="note">/ ${N_ITEMS}</span></div>
+        ${T.scoreNote(sc)}
         <p class="note">Losowe zgadywanie daje średnio ok. 3 punkty.${r.timedOut ? ' Skończył się czas.' : ''}</p>
         ${fast >= 5 ? `<p class="note">${fast} odpowiedzi padło w mniej niż 2 sekundy. Taki wynik może nie odzwierciedlać twoich możliwości.</p>` : ''}
       </div>
@@ -211,7 +214,8 @@
       <p>Wynik na skali IQ liczymy względem innych uczestników. Wystarczy 30 osób, żeby podać estymację wstępną z przedziałem błędu, który zawęża się z każdą kolejną osobą. Jeśli podasz rok urodzenia, a w twojej grupie wieku jest dość osób, porównujemy cię z rówieśnikami.</p>
       <p><button class="btn ghost" id="dl">Pobierz dane (JSON)</button> <a class="btn ghost" href="../">Wróć</a></p>
     `);
-    Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), TEST_ID, score, r.meta));
+    if (T.assisted(r.meta)) document.getElementById('compare').innerHTML = T.ASSISTED_NOTE;
+    else Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), TEST_ID, score, r.meta));
     document.getElementById('dl').addEventListener('click', () => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));

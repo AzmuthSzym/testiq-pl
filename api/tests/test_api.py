@@ -272,3 +272,12 @@ def test_assisted_tests_are_left_out_of_norms(client):
     stored = sqlite3.connect(client.db_path).execute(
         "SELECT assist FROM results WHERE participant = 'participant-ai-0001'").fetchone()
     assert stored == ("ai",)
+
+
+def test_answers_after_leaving_tab_do_not_count(client):
+    body = make_result(participant="participant-left-001", correct=10)
+    body["responses"][0].update(away=1, awayMs=5000)   # poprawna, ale po wyjściu z karty
+    body["responses"][1].update(away=1, awayMs=300)    # mignięcie poniżej sekundy: liczona
+    assert post(client, body).status_code == 201
+    score = sqlite3.connect(client.db_path).execute("SELECT score FROM results").fetchone()[0]
+    assert score == 9

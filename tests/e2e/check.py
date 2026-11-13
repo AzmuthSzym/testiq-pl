@@ -43,7 +43,7 @@ def answer_assist(page, assist):
     page.click("#assist-ok")
 
 
-def play_cube(page, correct_count, consent=True, keyboard=False, assist="nie", leave_at=None):
+def play_cube(page, correct_count, consent=True, keyboard=False, assist="nie", leave_at=None, leave_ms=300):
     page.goto(f"{SITE}/kostka/")
     if consent:
         page.check("#consent")
@@ -59,7 +59,7 @@ def play_cube(page, correct_count, consent=True, keyboard=False, assist="nie", l
         if i == leave_at:
             # wyjście z okna na chwilę (np. do czatu z AI) i powrót
             page.evaluate("window.dispatchEvent(new Event('blur'))")
-            page.wait_for_timeout(300)
+            page.wait_for_timeout(leave_ms)
             page.evaluate("window.dispatchEvent(new Event('focus'))")
         if keyboard:
             page.keyboard.press("ABCDEF"[choice])
@@ -126,12 +126,17 @@ def main():
         ctx, page, errors = new_page(browser)
         posted = []
         page.on("request", lambda r: r.method == "POST" and posted.append(json.loads(r.post_data)))
-        play_cube(page, 20, assist="ai", leave_at=3)
-        page.wait_for_selector("#compare >> text=Zbieramy dane")
+        play_cube(page, 20, assist="ai", leave_at=3, leave_ms=1300)
+        page.wait_for_selector("#compare >> text=rozwiązany z pomocą")
+        check(page.text_content(".score").strip().startswith("19"), f"odpowiedź po wyjściu z karty nie liczy się ({page.text_content('.score').strip()})")
+        check("po wyjściu z karty" in page.text_content(".card") and "Bez tych zasad: 20" in page.text_content(".card"),
+              "wynik mówi, ile odpowiedzi nie policzono")
+        check("histogram" not in page.inner_html("#compare") and "svg" not in page.inner_html("#compare"),
+              "test z pomocą: bez porównania z innymi")
         body = posted[0] if posted else {"meta": {}, "responses": []}
         away = [r for r in body["responses"] if r.get("away")]
         check(body["meta"].get("assist") == "ai", "odpowiedź o pomocy wysłana")
-        check(len(away) == 1 and away[0]["item"] == 4 and away[0]["awayMs"] >= 250,
+        check(len(away) == 1 and away[0]["item"] == 4 and away[0]["awayMs"] >= 1200,
               f"wyjście z okna zapisane przy zadaniu 4: {away}")
         norms = page.request.get(f"{API}/api/norms/kostka-v2").json()
         check(norms["n"] == 1 and norms["excluded"] == 1, f"test z pomocą AI poza normami: n={norms['n']}, excluded={norms['excluded']}")
