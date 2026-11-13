@@ -82,6 +82,9 @@ def test_rejects_without_consent(client):
     lambda b: b["meta"].update(nativeLang="niemiecki"),  # tylko „pl” albo „inny”
     lambda b: b["meta"].update(country="DE"),
     lambda b: b["meta"].update(nationality="polska"),  # narodowości nie zbieramy
+    lambda b: b["meta"].update(assist="troche"),
+    lambda b: b["responses"][0].update(away=-1),
+    lambda b: b["responses"][0].update(awayMs=10**9),
     lambda b: b["meta"].update(email="ktos@example.com"),  # nadmiarowe dane osobowe
     lambda b: b.update(ip="1.2.3.4"),
     lambda b: b["responses"][0].update(item=21),
@@ -248,3 +251,24 @@ def test_language_test_norms_only_native_speakers(client):
     assert post(client, vocab("participant-nn-1", 13, None)).status_code == 201
     norms = client.get("/api/norms/slownictwo-v1").json()
     assert norms["n"] == 2 and norms["mean"] == 14
+
+
+def test_assisted_tests_are_left_out_of_norms(client):
+    honest = make_result(participant="participant-honest-1", correct=10)
+    honest["meta"]["assist"] = "nie"
+    ai = make_result(participant="participant-ai-0001", correct=20)
+    ai["meta"]["assist"] = "ai"
+    left_tab = make_result(participant="participant-tab-001", correct=19)
+    for r in left_tab["responses"][:3]:
+        r.update(away=1, awayMs=15000)
+    one_blip = make_result(participant="participant-blip-01", correct=12)
+    one_blip["responses"][4].update(away=1, awayMs=800)  # jedno krótkie wyjście nie wyklucza
+    unknown = make_result(participant="participant-unkn-01", correct=8)  # brak odpowiedzi: liczymy
+    for body in (honest, ai, left_tab, one_blip, unknown):
+        assert post(client, body).status_code == 201
+    norms = client.get("/api/norms/kostka-v1").json()
+    assert norms["n"] == 3 and norms["excluded"] == 2
+    assert norms["mean"] == 10
+    stored = sqlite3.connect(client.db_path).execute(
+        "SELECT assist FROM results WHERE participant = 'participant-ai-0001'").fetchone()
+    assert stored == ("ai",)

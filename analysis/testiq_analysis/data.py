@@ -24,6 +24,9 @@ class TestData:
     sex: list                   # "k" / "m" / "inna" / None
     native_lang: list           # "pl" / "inny" / None
     country: list               # "pl" / "inny" / None
+    assist: list                # pytanie po teście: "nie" / "ai" / "inna" / None
+    away: np.ndarray            # osoby: liczba wyjść z karty w trakcie zadań
+    away_ms: np.ndarray         # osoby: łączny czas poza kartą
     timed_out: np.ndarray
 
 
@@ -46,8 +49,12 @@ def load(db_path: str, test: str, n_items: int) -> TestData:
     resp = np.full((n, n_items), np.nan)
     times = np.full((n, n_items), np.nan)
     choices = [[None] * n_items for _ in range(n)]
+    away = np.zeros(n)
+    away_ms = np.zeros(n)
     for i, row in enumerate(rows):
         for r in json.loads(row["responses"]):
+            away[i] += r.get("away", 0)
+            away_ms[i] += r.get("awayMs", 0)
             j = r["item"] - 1
             if 0 <= j < n_items:
                 resp[i, j] = 1.0 if r["correct"] else 0.0
@@ -64,6 +71,9 @@ def load(db_path: str, test: str, n_items: int) -> TestData:
         sex=[_col(row, "sex") for row in rows],
         native_lang=[_col(row, "native_lang") for row in rows],
         country=[_col(row, "country") for row in rows],
+        assist=[_col(row, "assist") for row in rows],
+        away=away,
+        away_ms=away_ms,
         timed_out=np.array([bool(row["timed_out"]) for row in rows]),
     )
 

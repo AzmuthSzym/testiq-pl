@@ -11,6 +11,8 @@ SEX = Literal["k", "m", "inna"]
 # odpowiedzi nie są potrzebne do norm, a zwiększałyby ryzyko identyfikacji.
 NATIVE_LANG = Literal["pl", "inny"]
 COUNTRY = Literal["pl", "inny"]
+# Odpowiedź na pytanie po teście: czy korzystano z pomocy (AI, inna).
+ASSIST = Literal["nie", "ai", "inna"]
 
 
 # Zgody w RODO (w Polsce) może udzielić osoba, która ukończyła 16 lat.
@@ -25,6 +27,7 @@ class Meta(BaseModel):
     sex: Optional[SEX] = None
     nativeLang: Optional[NATIVE_LANG] = None
     country: Optional[COUNTRY] = None
+    assist: Optional[ASSIST] = None
     consent: bool
 
 
@@ -53,6 +56,9 @@ class Response(BaseModel):
     level: Optional[int] = Field(default=None, ge=0, le=100)
     # pamięć robocza: długość ciągu cyfr
     span: Optional[int] = Field(default=None, ge=1, le=20)
+    # wyjścia z karty lub okna w trakcie zadania: liczba i łączny czas
+    away: Optional[int] = Field(default=None, ge=0, le=1000)
+    awayMs: Optional[int] = Field(default=None, ge=0, le=3_600_000)
 
     @field_validator("choice")
     @classmethod

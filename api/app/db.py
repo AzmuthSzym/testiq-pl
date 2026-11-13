@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS results (
     sex           TEXT,
     native_lang   TEXT,
     country       TEXT,
+    assist        TEXT,
     score         INTEGER NOT NULL,
     n_responses   INTEGER NOT NULL,
     responses     TEXT    NOT NULL,          -- JSON
@@ -39,7 +40,7 @@ class Database:
         self._conn.executescript(SCHEMA)
         # Baza sprzed dodania płci, języka i kraju: dopisz brakujące kolumny.
         cols = {r[1] for r in self._conn.execute("PRAGMA table_info(results)")}
-        for col in ("sex", "native_lang", "country"):
+        for col in ("sex", "native_lang", "country", "assist"):
             if col not in cols:
                 self._conn.execute(f"ALTER TABLE results ADD COLUMN {col} TEXT")
         self._conn.commit()
@@ -58,6 +59,7 @@ class Database:
             r.meta.sex,
             r.meta.nativeLang,
             r.meta.country,
+            r.meta.assist,
             score,
             len(r.responses),
             json.dumps([x.model_dump(exclude_none=True) for x in r.responses], separators=(",", ":")),
@@ -66,8 +68,8 @@ class Database:
             cur = self._conn.execute(
                 """INSERT OR IGNORE INTO results (test, participant, started_at, received_on,
                    duration_ms, timed_out, birth_year, education, sex, native_lang, country,
-                   score, n_responses, responses)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   assist, score, n_responses, responses)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 row,
             )
             self._conn.commit()
@@ -83,7 +85,7 @@ class Database:
         lang = "AND (native_lang IS NULL OR native_lang = 'pl')" if native_only else ""
         with self._lock:
             rows = self._conn.execute(
-                f"""SELECT score, birth_year, received_on, responses FROM results WHERE id IN (
+                f"""SELECT score, birth_year, received_on, assist, responses FROM results WHERE id IN (
                        SELECT MIN(id) FROM results WHERE test = ? GROUP BY participant) {lang}""",
                 (test,),
             ).fetchall()
@@ -92,8 +94,13 @@ class Database:
             age = None
             if row["birth_year"]:
                 age = int(row["received_on"][:4]) - row["birth_year"]
-            correct = {r["item"]: 1 if r["correct"] else 0 for r in json.loads(row["responses"])}
-            out.append({"score": row["score"], "age": age, "items": correct})
+            responses = json.loads(row["responses"])
+            correct = {r["item"]: 1 if r["correct"] else 0 for r in responses}
+            out.append({
+                "score": row["score"], "age": age, "items": correct, "assist": row["assist"],
+                "away": sum(r.get("away", 0) for r in responses),
+                "awayMs": sum(r.get("awayMs", 0) for r in responses),
+            })
         return out
 
     def first_attempt_scores(self, test: str) -> list[int]:

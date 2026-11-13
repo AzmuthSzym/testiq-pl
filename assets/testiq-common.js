@@ -180,6 +180,72 @@
     }).then((r) => r.ok).catch(() => false);
   }
 
+  function willSend(meta) {
+    return !!(apiBase() && meta && meta.consent && !tooYoung(meta));
+  }
+
+  // ---------- uczciwość pomiaru ----------
+  // Ktoś może zrobić zdjęcie zadania albo skopiować je do czatu z AI. Nie da
+  // się tego całkiem zablokować, ale można to zauważyć i nie wliczać takich
+  // wyników do norm:
+  //  - wyjścia z karty lub okna w trakcie zadania (liczba i łączny czas),
+  //  - blokada kopiowania treści zadań (najprostsza droga do czatu),
+  //  - pytanie po teście, czy była używana pomoc (patrz askAssist).
+  // Wynik osoby, którą widzi na ekranie, się od tego nie zmienia.
+  function focusWatch() {
+    let away = 0, awayMs = 0, since = null;
+    const leave = () => { if (since === null) { since = Date.now(); away++; } };
+    const back = () => { if (since !== null) { awayMs += Date.now() - since; since = null; } };
+    const onVis = () => (document.hidden ? leave() : back());
+    const noCopy = (e) => e.preventDefault();
+    root.addEventListener('blur', leave);
+    root.addEventListener('focus', back);
+    document.addEventListener('visibilitychange', onVis);
+    document.addEventListener('copy', noCopy);
+    document.addEventListener('cut', noCopy);
+    return {
+      // nieobecność od poprzedniego wywołania (do zapisania przy odpowiedzi)
+      mark() {
+        if (since !== null) { awayMs += Date.now() - since; since = Date.now(); }
+        const out = away || awayMs ? { away: Math.min(away, 1000), awayMs: Math.min(awayMs, 3600000) } : {};
+        away = 0; awayMs = 0;
+        return out;
+      },
+      stop() {
+        root.removeEventListener('blur', leave);
+        root.removeEventListener('focus', back);
+        document.removeEventListener('visibilitychange', onVis);
+        document.removeEventListener('copy', noCopy);
+        document.removeEventListener('cut', noCopy);
+      },
+    };
+  }
+
+  const ASSIST_OPTIONS = [
+    ['nie', 'Nie, wszystko samodzielnie'],
+    ['ai', 'Tak, z AI (np. czat albo zdjęcie zadania wysłane do AI)'],
+    ['inna', 'Tak, z innej pomocy (wyszukiwarka, kalkulator, notatki, druga osoba)'],
+    ['', 'Wolę nie odpowiadać'],
+  ];
+  // Ekran po teście, przed wynikiem. Pytamy przed pokazaniem wyniku, żeby
+  // odpowiedź nie zależała od tego, jak poszło.
+  function askAssist(container, done) {
+    container.innerHTML = `
+      <div class="kicker">Ostatnie pytanie</div>
+      <h1>Czy podczas testu korzystano z jakiejś pomocy?</h1>
+      <p class="lead">Twoja odpowiedź nie zmieni wyniku, który za chwilę zobaczysz. Testy rozwiązane z pomocą pomijamy przy liczeniu norm, żeby porównanie było uczciwe dla wszystkich. Szczera odpowiedź „tak” bardzo nam pomaga.</p>
+      <fieldset class="assist">
+        <legend class="sr-only">Pomoc podczas testu</legend>
+        ${ASSIST_OPTIONS.map(([v, label]) => `<label class="check"><input type="radio" name="assist" value="${v}"> <span>${label}</span></label>`).join('')}
+      </fieldset>
+      <p><button class="btn" id="assist-ok">Pokaż wynik</button></p>`;
+    root.scrollTo(0, 0);
+    document.getElementById('assist-ok').addEventListener('click', () => {
+      const picked = container.querySelector('input[name="assist"]:checked');
+      done(picked && picked.value ? picked.value : null);
+    });
+  }
+
   function fetchNorms(testId) {
     const base = apiBase();
     if (!base) return Promise.resolve(null);
@@ -268,6 +334,6 @@
     });
   }
 
-  root.TestIQ = { MIN_AGE, tooYoung, MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
+  root.TestIQ = { MIN_AGE, tooYoung, willSend, focusWatch, askAssist, MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.TestIQ;
 })(typeof window !== 'undefined' ? window : globalThis);

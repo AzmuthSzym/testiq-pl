@@ -443,3 +443,20 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
     do istniejącej bazy (test migracji w `test_api.py`).
   - **Do zrobienia przy danych:** w analizie DIF według płci (np. Mantel–Haenszel)
     i porównanie norm Polska / inny kraj.
+- **2026-11-13: pomoc AI i ściąganie** (pytanie właściciela: co jeśli ktoś robi zdjęcia
+  zadań i pyta AI?). Nie da się tego zablokować w teście online, więc mierzymy i nie
+  wliczamy do norm:
+  - **pytanie po teście**, przed pokazaniem wyniku: „nie / AI / inna pomoc / wolę nie
+    odpowiadać” (`meta.assist`); tylko gdy wynik ma być wysłany;
+  - **wyjścia z karty/okna** przy każdym zadaniu (`away`, `awayMs`: `blur` +
+    `visibilitychange`); zdjęcie drugim telefonem tego nie wywoła;
+  - **blokada zaznaczania i kopiowania** treści zadań (najprostsza droga do czatu);
+  - **normy w API** pomijają testy z pomocą lub z > 2 wyjściami albo > 20 s poza kartą;
+    `GET /api/norms` zwraca `excluded`. Te same progi w `careless.assisted`;
+  - **analiza:** flaga „wolno i prawie bezbłędnie” (`careless.slow_and_accurate`) tylko
+    do przeglądu i analizy wrażliwości, bez automatycznego wykluczania.
+  - **Pytanie 7 (koszt):** sprawdzić, jak dobrze obecne modele AI rozwiązują nasze zadania
+    (zdjęcie zadania → model). Wymaga klucza API i kosztuje kilka–kilkanaście dolarów.
+    Spodziewam się: ciągi liczbowe łatwe dla AI, matryce częściowo, kostka (śledzenie
+    obrotów z rysunku) trudna. Wynik pokaże, który test najbardziej wymaga ochrony
+    (np. krótszy czas na zadanie w nowej wersji).

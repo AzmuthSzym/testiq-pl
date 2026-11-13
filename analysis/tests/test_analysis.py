@@ -199,3 +199,23 @@ def test_load_first_attempts(tmp_path):
     out = tmp_path / "o.csv"
     data.export_csv(d, str(out))
     assert "p1" not in out.read_text(), "w eksporcie bez identyfikatorów"
+
+
+def test_assisted_matches_api_thresholds():
+    a = careless.assisted(["nie", "ai", "inna", None, None, None],
+                          [0, 0, 0, 3, 1, 2], [0, 0, 0, 1000, 25_000, 5_000])
+    assert a.tolist() == [False, True, True, True, True, False]
+
+
+def test_slow_and_accurate_flags_only_slow_top_scorers():
+    rng = np.random.default_rng(1)
+    n, k = 200, 16
+    times = rng.lognormal(np.log(8000), 0.3, size=(n, k))
+    resp = (rng.random((n, k)) < 0.5).astype(float)
+    times[0] *= 6          # bardzo wolno ...
+    resp[0] = 1            # ... i bezbłędnie: flaga
+    times[1] *= 6          # bardzo wolno, ale słaby wynik: bez flagi
+    resp[1] = 0
+    flagged = careless.slow_and_accurate(resp, times)
+    assert flagged[0] and not flagged[1]
+    assert flagged.sum() <= 3

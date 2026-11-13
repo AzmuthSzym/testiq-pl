@@ -36,7 +36,14 @@ def new_page(browser, **kw):
     return context, page, errors
 
 
-def play_cube(page, correct_count, consent=True, keyboard=False):
+def answer_assist(page, assist):
+    """Pytanie po teście o pomoc (pokazywane tylko, gdy wynik idzie do API)."""
+    page.wait_for_selector("text=Ostatnie pytanie")
+    page.check(f'input[name="assist"][value="{assist}"]')
+    page.click("#assist-ok")
+
+
+def play_cube(page, correct_count, consent=True, keyboard=False, assist="nie", leave_at=None):
     page.goto(f"{SITE}/kostka/")
     if consent:
         page.check("#consent")
@@ -49,11 +56,18 @@ def play_cube(page, correct_count, consent=True, keyboard=False):
     for i, ans in enumerate(answers):
         choice = ans if i < correct_count else (ans + 1) % 6
         page.wait_for_selector(f"text=Zadanie {i + 1} z 20")
+        if i == leave_at:
+            # wyjście z okna na chwilę (np. do czatu z AI) i powrót
+            page.evaluate("window.dispatchEvent(new Event('blur'))")
+            page.wait_for_timeout(300)
+            page.evaluate("window.dispatchEvent(new Event('focus'))")
         if keyboard:
             page.keyboard.press("ABCDEF"[choice])
         else:
             page.locator(".options .opt").nth(choice).click()
-    page.wait_for_selector("text=Wynik")
+    if consent:
+        answer_assist(page, assist)
+    page.wait_for_selector("h1 >> text=Obracanie kostki")
 
 
 def play_runner(page, path, answers_js, keyboard=False, correct_count=None):
@@ -69,7 +83,8 @@ def play_runner(page, path, answers_js, keyboard=False, correct_count=None):
             page.keyboard.press("ABCDEFGH"[choice])
         else:
             page.locator("#item .opt").nth(choice).click()
-    page.wait_for_selector("text=Wynik")
+    answer_assist(page, "nie")
+    page.wait_for_selector(".kicker >> text=Wynik")
     return answers
 
 
@@ -104,6 +119,22 @@ def main():
         check(meta.get("sex") == "k" and meta.get("nativeLang") == "pl" and meta.get("country") == "pl",
               f"płeć, język i kraj wysłane: {meta}")
         page.screenshot(path="/out/kostka-wynik-malo-danych.png", full_page=True)
+        check(not errors, f"bez błędów JS: {errors}")
+        ctx.close()
+
+        # 1b. Pomoc AI i wyjście z karty: wynik zapisany, ale nie wchodzi do norm.
+        ctx, page, errors = new_page(browser)
+        posted = []
+        page.on("request", lambda r: r.method == "POST" and posted.append(json.loads(r.post_data)))
+        play_cube(page, 20, assist="ai", leave_at=3)
+        page.wait_for_selector("#compare >> text=Zbieramy dane")
+        body = posted[0] if posted else {"meta": {}, "responses": []}
+        away = [r for r in body["responses"] if r.get("away")]
+        check(body["meta"].get("assist") == "ai", "odpowiedź o pomocy wysłana")
+        check(len(away) == 1 and away[0]["item"] == 4 and away[0]["awayMs"] >= 250,
+              f"wyjście z okna zapisane przy zadaniu 4: {away}")
+        norms = page.request.get(f"{API}/api/norms/kostka-v2").json()
+        check(norms["n"] == 1 and norms["excluded"] == 1, f"test z pomocą AI poza normami: n={norms['n']}, excluded={norms['excluded']}")
         check(not errors, f"bez błędów JS: {errors}")
         ctx.close()
 
@@ -203,6 +234,9 @@ def main():
             if i == 13:
                 page.screenshot(path="/out/matryce-zadanie-14.png", full_page=True)
             page.keyboard.press("ABCDEFGH"[ans if i < 10 else (ans + 1) % 8])
+        page.wait_for_selector("text=Ostatnie pytanie")
+        page.screenshot(path="/out/pytanie-o-pomoc.png", full_page=True)
+        answer_assist(page, "nie")
         page.wait_for_selector("#compare >> text=Zbieramy dane")
         check(page.text_content(".score").strip().startswith("10"), f"matryce: wynik 10 ({page.text_content('.score').strip()})")
         page.screenshot(path="/out/matryce-wynik.png", full_page=True)
@@ -244,6 +278,7 @@ def main():
                 page.click("#item button[type=submit]")
             else:
                 page.click("#item [data-skip]")
+        answer_assist(page, "nie")
         page.wait_for_selector("#compare >> text=Zbieramy dane")
         check(page.text_content(".score").strip().startswith("9"), f"ciągi: wynik 9 ({page.text_content('.score').strip()})")
         page.screenshot(path="/out/ciagi-wynik.png", full_page=True)
@@ -285,6 +320,7 @@ def main():
             page.wait_for_selector("#dig-test", timeout=20000)
             page.fill("#dig-test", items[idx] if ok else "1")
             page.press("#dig-test", "Enter")
+        answer_assist(page, "nie")
         page.wait_for_selector("#compare >> text=Zbieramy dane", timeout=20000)
         txt = page.text_content("main")
         check("w przód 5" in txt and "wspak 2" in txt, "pamięć: zakresy 5 i 2 po regule przerwania")
@@ -317,6 +353,7 @@ def main():
             opts = page.locator(".vocab-opt")
             idx = [k for k in range(5) if target in opts.nth(k).text_content()][0]
             page.keyboard.press("ABCDE"[idx if i < 12 else (idx + 1) % 5])
+        answer_assist(page, "nie")
         page.wait_for_selector("#compare >> text=Zbieramy dane")
         check(page.text_content(".score").strip().startswith("12"), f"słownictwo: wynik 12 ({page.text_content('.score').strip()})")
         check(not errors, f"słownictwo: bez błędów JS: {errors}")

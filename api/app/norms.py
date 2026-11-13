@@ -29,6 +29,20 @@ AGE_BANDS = [(16, 19), (20, 29), (30, 39), (40, 49), (50, 59), (60, 69), (70, 99
 MIN_N_STATS = 30
 
 
+# Do norm nie wliczamy testów, w których uczestnik przyznał się do pomocy
+# (AI, inna) albo wielokrotnie lub na dłużej wychodził z karty w trakcie
+# zadań (np. żeby zapytać AI o zdjęcie zadania). Progi są ostrożne: jedno
+# krótkie wyjście (powiadomienie, przypadkowe kliknięcie) nie wyklucza.
+MAX_AWAY_EVENTS = 2
+MAX_AWAY_MS = 20_000
+
+
+def assisted(attempt: dict) -> bool:
+    return (attempt.get("assist") in ("ai", "inna")
+            or attempt.get("away", 0) > MAX_AWAY_EVENTS
+            or attempt.get("awayMs", 0) > MAX_AWAY_MS)
+
+
 def kr20(attempts: list[dict], n_items: int):
     """Rzetelność KR-20 (alfa Cronbacha dla zadań 0/1); brak odpowiedzi = 0."""
     n = len(attempts)

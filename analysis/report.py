@@ -37,10 +37,20 @@ def main(argv=None):
         return 0
 
     fl = careless.flags(d.responses, d.times_ms, d.choices, args.guess, fast_ms=args.fast_ms)
-    excl = np.array([f["wyklucz"] for f in fl])
-    print(f"Brak zaangażowania (≥ 2 flagi): {excl.sum()} osób ({excl.mean():.0%})")
+    careless_excl = np.array([f["wyklucz"] for f in fl])
+    print(f"Brak zaangażowania (≥ 2 flagi): {careless_excl.sum()} osób ({careless_excl.mean():.0%})")
     for key in ["szybkie", "ta_sama_opcja", "bledy_guttmana", "wynik_losowy"]:
         print(f"  {key}: {sum(f[key] for f in fl)}")
+    helped = careless.assisted(d.assist, d.away, d.away_ms)
+    told = np.array([a in ("ai", "inna") for a in d.assist])
+    print(f"Pomoc z zewnątrz (wykluczone): {helped.sum()} osób ({helped.mean():.0%}); "
+          f"przyznanie się: {told.sum()} (w tym AI: {sum(a == 'ai' for a in d.assist)}), "
+          f"wychodzenie z karty: {(helped & ~told).sum()}")
+    answered = sum(a is not None for a in d.assist)
+    print(f"  na pytanie o pomoc odpowiedziało {answered} z {n}")
+    slow = careless.slow_and_accurate(d.responses, d.times_ms)
+    print(f"Wolno i prawie bezbłędnie (tylko do przeglądu, nie wykluczamy): {slow.sum()} osób")
+    excl = careless_excl | helped
     x = d.responses[~excl]
 
     total = np.nan_to_num(x).sum(axis=1)

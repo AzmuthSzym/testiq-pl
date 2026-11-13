@@ -67,6 +67,7 @@
       const responses = [];
       const t0 = Date.now();
       let idx = 0, finished = false, timer = null;
+      const focus = T.focusWatch();
       h(`
         <div class="testbar"><span class="kicker" id="count" aria-live="polite"></span>
           <span class="timer" id="timer" ${config.timeLimit ? 'role="timer" aria-label="Pozostały czas"' : ''}></span></div>
@@ -108,7 +109,7 @@
           answered = true;
           responses.push(Object.assign({
             item: idx + 1, level: config.levelOf(item), choice, correct, ms: Date.now() - tShown,
-          }, extra || {}));
+          }, focus.mark(), extra || {}));
           idx++;
           setTimeout(show, 180);
           return true;
@@ -119,16 +120,23 @@
         if (finished) return;
         finished = true;
         if (timer) clearInterval(timer);
+        focus.stop();
         T.guardUnload(false);
         T.onKeys(null);
-        const result = {
-          test: config.id, version: config.version, participant: T.participantId(),
-          startedAt: new Date(t0).toISOString(), durationMs: Date.now() - t0, timedOut,
-          meta, responses,
+        const durationMs = Date.now() - t0;
+        const complete = (assist) => {
+          const result = {
+            test: config.id, version: config.version, participant: T.participantId(),
+            startedAt: new Date(t0).toISOString(), durationMs, timedOut,
+            meta: Object.assign({}, meta, assist ? { assist } : {}), responses,
+          };
+          T.store.set('testiq-last-' + config.id, JSON.stringify(result));
+          // statystyki pobieramy dopiero po zapisie, żeby obejmowały ten wynik
+          results(result, items, T.sendResult(result));
         };
-        T.store.set('testiq-last-' + config.id, JSON.stringify(result));
-        // statystyki pobieramy dopiero po zapisie, żeby obejmowały ten wynik
-        results(result, items, T.sendResult(result));
+        // pytanie o pomoc tylko wtedy, gdy wynik ma trafić do norm
+        if (T.willSend(meta)) T.askAssist(app, complete);
+        else complete(null);
       }
       show();
     }

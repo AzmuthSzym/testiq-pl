@@ -70,6 +70,10 @@ płatnościami.
   - czy połączenie rok urodzenia + wykształcenie + płeć + kraj nie zwiększa
     zbytnio ryzyka identyfikacji (szczególnie przy kraju „inny” i rzadkich
     kombinacjach)? Statystyki grup pokazujemy od 30 osób.
+- [ ] ⚖️ **Rejestrowanie wyjść z karty w trakcie testu** (dodane 2026-11-13):
+  liczba i czas, bez informacji, dokąd użytkownik przechodzi; wysyłane tylko z
+  wynikiem, za zgodą. Opisane w polityce prywatności. Czy wymaga to osobnej
+  informacji przed testem (a nie tylko w polityce)?
 - [ ] ⚖️ **Wiek zgody:**
   - Strona i serwer odrzucają wyniki osób poniżej 16 lat, jeśli podały rok
     urodzenia. Jeśli nie podały, polegamy na oświadczeniu w treści zgody.

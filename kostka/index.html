@@ -116,6 +116,7 @@
     const responses = [];
     const t0 = Date.now();
     let idx = 0, tShown = 0, finished = false;
+    const focus = T.focusWatch();
 
     h(`
       <div class="testbar"><span class="kicker" id="count" aria-live="polite"></span><span class="timer" id="timer" role="timer" aria-label="Pozostały czas"></span></div>
@@ -150,7 +151,7 @@
         b.classList.add('picked');
         responses.push({
           item: idx + 1, moves: items[idx].moves.length, choice: i,
-          correct: i === items[idx].answer, ms: Date.now() - tShown,
+          correct: i === items[idx].answer, ms: Date.now() - tShown, ...focus.mark(),
         });
         idx++;
         setTimeout(() => (idx < N_ITEMS ? show() : finish(false)), 180);
@@ -161,16 +162,23 @@
       if (finished) return;
       finished = true;
       clearInterval(timer);
+      focus.stop();
       T.guardUnload(false);
       T.onKeys(null);
-      const result = {
-        test: TEST_ID, version: GEN_VERSION, participant: T.participantId(),
-        startedAt: new Date(t0).toISOString(), durationMs: Date.now() - t0, timedOut,
-        meta, responses,
+      const durationMs = Date.now() - t0;
+      const complete = (assist) => {
+        const result = {
+          test: TEST_ID, version: GEN_VERSION, participant: T.participantId(),
+          startedAt: new Date(t0).toISOString(), durationMs, timedOut,
+          meta: Object.assign({}, meta, assist ? { assist } : {}), responses,
+        };
+        store.set('testiq-last-' + TEST_ID, JSON.stringify(result));
+        // statystyki pobieramy dopiero po zapisie, żeby obejmowały ten wynik
+        results(result, T.sendResult(result));
       };
-      store.set('testiq-last-' + TEST_ID, JSON.stringify(result));
-      // statystyki pobieramy dopiero po zapisie, żeby obejmowały ten wynik
-      results(result, T.sendResult(result));
+      // pytanie o pomoc tylko wtedy, gdy wynik ma trafić do norm
+      if (T.willSend(meta)) T.askAssist(document.getElementById('app'), complete);
+      else complete(null);
     }
     show();
   }

@@ -221,3 +221,12 @@ svg.mcell { width: 100%; height: auto; display: block; aspect-ratio: 1; }
 .prose code { font-size: 15px; }
 .draft { border: 2px solid var(--accent); padding: 12px 16px; margin: 0 0 20px; background: var(--paper); }
 .footnav a { margin: 0 2px; }
+
+/* pytanie o pomoc po teście */
+fieldset.assist { border: 0; padding: 0; margin: 8px 0 20px; }
+fieldset.assist label.check { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; margin: 8px 0; cursor: pointer; }
+fieldset.assist label.check:has(input:checked) { border-color: var(--accent); }
+
+/* treść zadań nie daje się zaznaczyć i skopiować (np. do czatu z AI) */
+#item, #question, .question { -webkit-user-select: none; user-select: none; }
+#item input { -webkit-user-select: text; user-select: text; }

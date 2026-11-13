@@ -78,6 +78,33 @@ def chance_level(responses: np.ndarray, p_guess: float, alpha: float = 0.05) -> 
     return np.array(out)
 
 
+# Te same progi co w api/app/norms.py (assisted).
+MAX_AWAY_EVENTS = 2
+MAX_AWAY_MS = 20_000
+
+
+def assisted(assist, away, away_ms) -> np.ndarray:
+    """Pomoc z zewnątrz: przyznanie się (AI, inna) albo wielokrotne lub dłuższe
+    wyjścia z karty w trakcie zadań. Takie testy nie wchodzą do norm."""
+    a = np.array([x in ("ai", "inna") for x in assist], bool)
+    return a | (np.asarray(away) > MAX_AWAY_EVENTS) | (np.asarray(away_ms) > MAX_AWAY_MS)
+
+
+def slow_and_accurate(responses, times_ms, time_z=2.0, score_quantile=0.9) -> np.ndarray:
+    """Wzór typowy dla rozwiązywania z AI na drugim urządzeniu (zdjęcie zadania,
+    czekanie na odpowiedź): bardzo długi typowy czas odpowiedzi (mediana
+    log-czasu ponad time_z SD powyżej średniej próby) przy wyniku w górnych
+    10%. Ten sam wzór daje bardzo staranna, wolna osoba, więc to tylko flaga
+    do przeglądu i do porównań (np. czy wykluczenie zmienia normy), a nie
+    powód wykluczenia."""
+    t = np.asarray(times_ms, float)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        med = np.nanmedian(np.log(np.where(t > 0, t, np.nan)), axis=1)
+    z = (med - np.nanmean(med)) / np.nanstd(med)
+    score = np.nan_to_num(np.asarray(responses, float)).sum(axis=1)
+    return (z > time_z) & (score >= np.quantile(score, score_quantile))
+
+
 def flags(responses, times_ms, choices, p_guess, fast_ms=1500, fast_limit=0.3, run_limit=6, guttman_limit=0.4):
     """Tabela flag dla każdej osoby i decyzja o wykluczeniu (≥ 2 flagi)."""
     fs = fast_share(times_ms, fast_ms)
