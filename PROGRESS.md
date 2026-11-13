@@ -455,7 +455,11 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
     `GET /api/norms` zwraca `excluded`. Te same progi w `careless.assisted`;
   - **analiza:** flaga „wolno i prawie bezbłędnie” (`careless.slow_and_accurate`) tylko
     do przeglądu i analizy wrażliwości, bez automatycznego wykluczania.
-  - **Pytanie 7 (koszt):** sprawdzić, jak dobrze obecne modele AI rozwiązują nasze zadania
+  - **Pytanie 7 — zrobione bez kosztów (2026-11-13):** agent Claude Opus 5.5 w Claude Code
+    rozwiązał ze zrzutów 52/52 zadań (kostka 20/20, matryce 16/16, ciągi 16/16), wyniki w
+    `ai-bench/wyniki-agent.md`. Zadania nie są odporne na AI, ochrona = wykrywanie + ewentualnie
+    limit czasu na zadanie. Wersja przez API (`ai-bench/run.sh`, 3 powtórzenia) zostaje na później.
+  - (pierwotne pytanie) sprawdzić, jak dobrze obecne modele AI rozwiązują nasze zadania
     (zdjęcie zadania → model). Wymaga klucza API i kosztuje kilka–kilkanaście dolarów.
     Spodziewam się: ciągi liczbowe łatwe dla AI, matryce częściowo, kostka (śledzenie
     obrotów z rysunku) trudna. Wynik pokaże, który test najbardziej wymaga ochrony
