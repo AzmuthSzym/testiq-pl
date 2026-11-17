@@ -501,3 +501,11 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
 - **Okres przechowywania:** kontener backup codziennie usuwa wyniki starsze niż `RETAIN_DAYS` (1095), z kopii znikają po 14 dniach.
 - **Zgoda w formularzu:** zamiast „anonimowe” (dane są pseudonimowe) „bez imienia i danych kontaktowych”, z informacją o wycofaniu zgody.
 - **Zbieranie wyników ruszyło (2026-11-17):** `apiUrl` = https://api.testyzdolnosci.pl, sprawdzone na żywo wysłanie i usunięcie wyniku. support@testyzdolnosci.pl działa przez Email Routing w Cloudflare (przekierowanie na skrzynkę administratora).
+
+## Bezpieczeństwo przed testami (2026-11-17)
+
+- Strona: ścisła polityka CSP w każdej stronie (skrypty, style i czcionki tylko z własnej domeny, połączenia tylko z własną domeną i api.testyzdolnosci.pl, bez wtyczek i formularzy). Skrypty stron przeniesione z HTML do `*/app.js`, kreskowanie matryc przez CSSOM zamiast atrybutu style. E2E sprawdza strony z CSP (podmienia tylko adres API i dopuszcza eval na potrzeby Playwright).
+- API: nagłówki nosniff, CSP `default-src 'none'; frame-ancestors 'none'`, Referrer-Policy no-referrer (obok HSTS).
+- Kontenery api i backup: system plików tylko do odczytu, cap_drop ALL, no-new-privileges; nginx i certbot: no-new-privileges.
+- Sprawdzone: SSH tylko klucze, bez haseł; połączenia z pominięciem Cloudflare odrzucane; CORS tylko dla domen strony; brak sekretów w repozytorium i historii; strony na żywo bez błędów CSP, wysłanie i usunięcie wyniku działa.
+- Do zrobienia przez właściciela: rekord DMARC w Cloudflare, kopia zapasowa poza serwerem.
