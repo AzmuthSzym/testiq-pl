@@ -20,19 +20,19 @@ jobs:
       - name: API odpowiada
         run: |
           for i in 1 2 3; do
-            body=$(curl -fsS -m 20 https://api.testyzdolnosci.pl/api/health) && echo "$body" | grep -q '"ok":true' && { echo "API: $body"; exit 0; }
+            body=$(curl -fsS -m 20 --retry 3 --retry-delay 20 --retry-all-errors https://api.testyzdolnosci.pl/api/health) && echo "$body" | grep -q '"ok":true' && { echo "API: $body"; exit 0; }
             echo "Próba $i nieudana, ponawiam za minutę"; sleep 60
           done
           echo "::error::API https://api.testyzdolnosci.pl nie odpowiada poprawnie"; exit 1
 
       - name: API przyjmuje zapytania ze strony (CORS)
         run: |
-          curl -fsS -m 20 -o /dev/null -D headers.txt -H "Origin: https://testyzdolnosci.pl" https://api.testyzdolnosci.pl/api/norms/zdania-v1
+          curl -fsS -m 20 --retry 3 --retry-delay 20 --retry-all-errors -o /dev/null -D headers.txt -H "Origin: https://testyzdolnosci.pl" https://api.testyzdolnosci.pl/api/norms/zdania-v1
           grep -qi "access-control-allow-origin: https://testyzdolnosci.pl" headers.txt || { echo "::error::Brak nagłówka CORS dla testyzdolnosci.pl"; exit 1; }
 
       - name: Strona działa
         run: |
           for path in "" zdania/ prywatnosc/ assets/config.js; do
-            curl -fsS -m 20 -o /dev/null "https://testyzdolnosci.pl/$path" || { echo "::error::Strona https://testyzdolnosci.pl/$path nie działa"; exit 1; }
+            curl -fsS -m 20 --retry 3 --retry-delay 20 --retry-all-errors -o /dev/null "https://testyzdolnosci.pl/$path" || { echo "::error::Strona https://testyzdolnosci.pl/$path nie działa"; exit 1; }
           done
-          curl -fsS -m 20 https://testyzdolnosci.pl/assets/config.js | grep -q "api.testyzdolnosci.pl" || { echo "::error::config.js nie wskazuje na API (wyniki nie są zbierane)"; exit 1; }
+          curl -fsS -m 20 --retry 3 --retry-delay 20 --retry-all-errors https://testyzdolnosci.pl/assets/config.js | grep -q "api.testyzdolnosci.pl" || { echo "::error::config.js nie wskazuje na API (wyniki nie są zbierane)"; exit 1; }
