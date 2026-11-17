@@ -415,7 +415,13 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
 
 ## Pytania i decyzje do podjęcia
 
-1. **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:
+1. **Domena: zrobione (2026-11-17).** Wybrana opcja b): `testyzdolnosci.pl`, DNS w Cloudflare (plan Free).
+   - **Strona:** `https://testyzdolnosci.pl` (GitHub Pages, własna domena, wymuszony HTTPS). Stary adres przekierowuje na nowy.
+   - **API:** `https://api.testyzdolnosci.pl` (rekord AAAA przez proxy Cloudflare, SSL „Full (strict)”, certyfikat Let's Encrypt). `NGINX_MODE=cloudflare`: nginx w sieci hosta, połączenia spoza Cloudflare odrzucane, adres klienta z `CF-Connecting-IP`.
+   - **CORS:** testyzdolnosci.pl, www i stary adres github.io.
+   - **Zbieranie nie ruszyło:** `apiUrl` wciąż pusty, czeka na dane administratora w polityce prywatności.
+
+   Poprzednia treść pytania: **Domena dla API (blokuje uruchomienie zbierania danych).** Odwrotny DNS serwera to `srv71.mikr.us`, więc to najpewniej VPS z mikr.us. Tam adres IPv4 jest zwykle współdzielony między serwerami i dostępne są tylko wybrane porty, a własny jest adres IPv6. Porty 80 i 443 na IPv4, potrzebne do zwykłego Let's Encrypt, raczej nie są Twoje. Sprawdź to w panelu. Opcje:
    - **a) Subdomena z panelu mikr.us** (o ile jest w Twoim pakiecie), skierowana na port przydzielony temu serwerowi. HTTPS zapewnia wtedy mikr.us. U nas: `NGINX_MODE=http`, `HTTP_BIND=0.0.0.0:<port>`, `REAL_IP_FROM=<adresy proxy mikr.us>`. Najtańsze, bo darmowe.
    - **b) Własna domena (ok. 10–60 zł/rok) przez Cloudflare** (darmowy plan, proxy w trybie „Full”). Cloudflare przyjmuje ruch na IPv4 i łączy się z serwerem przez IPv6. Pozwala też ukryć adres serwera.
    - **c) Własna domena, rekord AAAA i Let's Encrypt** bezpośrednio (tryb `https`). Prosta, ale użytkownicy bez IPv6 nie połączą się z API, a to wciąż spory odsetek, więc odradzam.
