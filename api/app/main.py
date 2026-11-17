@@ -2,7 +2,7 @@
 
 Konfiguracja przez zmienne środowiskowe:
   DB_PATH          ścieżka bazy SQLite (domyślnie ./data/results.db)
-  ALLOWED_ORIGIN   jedyny dozwolony origin CORS (domyślnie https://azmuthszym.github.io)
+  ALLOWED_ORIGIN   dozwolone originy CORS, rozdzielone przecinkami (domyślnie https://azmuthszym.github.io)
   TRUST_PROXY      "1" = adres klienta z nagłówka X-Real-IP (ustawia go nginx)
   RATE_LIMIT       liczba wyników na adres na godzinę (domyślnie 20)
 """
@@ -55,7 +55,7 @@ def create_app(
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[allowed_origin],
+        allow_origins=[o.strip() for o in allowed_origin.split(",") if o.strip()],
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
         max_age=86400,

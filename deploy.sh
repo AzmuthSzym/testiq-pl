@@ -4,7 +4,8 @@
 #
 #   ./deploy.sh test        testy API (pytest) i testy JS (node --test)
 #   ./deploy.sh up          testy, potem budowa i (re)start usług
-#   ./deploy.sh cert        pierwsze pobranie certyfikatu (tryb https)
+#   ./deploy.sh cert        pierwsze pobranie certyfikatu (tryby https i cloudflare)
+#   ./deploy.sh cf-ips      odświeżenie listy adresów Cloudflare
 #   ./deploy.sh status      stan usług i odpowiedź /api/health
 #   ./deploy.sh backup      kopia bazy teraz (poza codzienną)
 #   ./deploy.sh down        zatrzymanie usług (dane zostają)
@@ -23,7 +24,7 @@ NGINX_MODE="${NGINX_MODE:-http}"
 
 compose() {
   local profiles=()
-  [[ "$NGINX_MODE" == "https" ]] && profiles=(--profile letsencrypt)
+  [[ "$NGINX_MODE" == "https" || "$NGINX_MODE" == "cloudflare" ]] && profiles=(--profile letsencrypt)
   docker compose -f "$DEPLOY/docker-compose.yml" --project-name testiq "${profiles[@]}" "$@"
 }
 
@@ -60,7 +61,7 @@ case "${1:-}" in
     run_tests
     compose build api
     prepare_dirs
-    if [[ "$NGINX_MODE" == "https" && ! -d "$DEPLOY/certbot/conf/live/${DOMAIN:-}" ]]; then
+    if [[ "$NGINX_MODE" != "http" && ! -d "$DEPLOY/certbot/conf/live/${DOMAIN:-}" ]]; then
       echo "Brak certyfikatu dla '${DOMAIN:-}'. Najpierw: ./deploy.sh cert" >&2
       exit 1
     fi
@@ -77,7 +78,14 @@ case "${1:-}" in
     docker run --rm -v "$DEPLOY/certbot/www:/var/www/certbot" -v "$DEPLOY/certbot/conf:/etc/letsencrypt" \
       certbot/certbot:v3.0.1 certonly --webroot -w /var/www/certbot -d "$DOMAIN" \
       --agree-tos --register-unsafely-without-email --non-interactive
-    echo "Certyfikat gotowy. Ustaw NGINX_MODE=https w deploy/.env i uruchom ./deploy.sh up"
+    echo "Certyfikat gotowy. Ustaw NGINX_MODE=https (albo cloudflare) w deploy/.env i uruchom ./deploy.sh up"
+    ;;
+  cf-ips)
+    v4=$(curl -fsS https://www.cloudflare.com/ips-v4) && v6=$(curl -fsS https://www.cloudflare.com/ips-v6)
+    head="# Adresy Cloudflare (https://www.cloudflare.com/ips/). Odświeżanie: ./deploy.sh cf-ips"
+    { echo "$head"; for r in $v4 $v6; do echo "$r 1;"; done; } > "$DEPLOY/nginx/cloudflare-ips.conf"
+    { echo "$head"; for r in $v4 $v6; do echo "set_real_ip_from $r;"; done; } > "$DEPLOY/nginx/cloudflare-realip.conf"
+    echo "Zapisano $(echo $v4 $v6 | wc -w) zakresów. Przeładowanie: ./deploy.sh up"
     ;;
   status)
     compose ps

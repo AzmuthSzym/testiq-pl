@@ -1,0 +1,57 @@
+# Tryb "cloudflare": domena za proxy Cloudflare (pomarańczowa chmurka),
+# Cloudflare łączy się z serwerem po IPv6. Certyfikat Let's Encrypt jak w
+# trybie https (Cloudflare w trybie SSL "Full (strict)").
+#
+# - Prawdziwy adres klienta z nagłówka CF-Connecting-IP, ale tylko gdy
+#   połączenie przyszło z adresów Cloudflare (cloudflare-ips.conf).
+# - Połączenia spoza Cloudflare są zamykane bez odpowiedzi (444), więc serwera
+#   nie da się odpytać z pominięciem Cloudflare.
+
+limit_req_zone $binary_remote_addr zone=api:1m rate=30r/m;
+
+# adres, z którego naprawdę przyszło połączenie (przed podmianą przez realip)
+geo $realip_remote_addr $from_cloudflare {
+    default 0;
+    include /etc/nginx/snippets/cloudflare-ips.conf;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+    access_log off;
+    if ($from_cloudflare = 0) { return 444; }
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+    if ($from_cloudflare = 0) { return 444; }
+
+    include /etc/nginx/snippets/cloudflare-realip.conf;
+    real_ip_header CF-Connecting-IP;
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:5m;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    include /etc/nginx/snippets/common.conf;
+}
+
+# inne nazwy (np. sam adres IP) - bez odpowiedzi
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    ssl_reject_handshake on;
+}

@@ -147,6 +147,17 @@ def test_cors_only_for_github_pages(client):
     assert get.headers.get("access-control-allow-origin") is None
 
 
+def test_cors_several_origins(tmp_path):
+    app = create_app(db_path=str(tmp_path / "t.db"), rate_limit=1000,
+                     allowed_origin="https://testyzdolnosci.pl, https://azmuthszym.github.io")
+    with TestClient(app) as c:
+        for origin in ("https://testyzdolnosci.pl", "https://azmuthszym.github.io"):
+            r = c.options("/api/results", headers={"Origin": origin, "Access-Control-Request-Method": "POST"})
+            assert r.headers.get("access-control-allow-origin") == origin
+        r = c.options("/api/results", headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "POST"})
+        assert r.headers.get("access-control-allow-origin") is None
+
+
 def test_norms_use_first_attempt_only(client):
     for i, score in enumerate([5, 10, 15]):
         post(client, make_result(participant=f"person-{i:04d}", correct=score))

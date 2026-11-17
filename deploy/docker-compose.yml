@@ -1,4 +1,4 @@
-# Test IQ PL: API + nginx + kopia zapasowa (+ certbot w trybie "letsencrypt").
+# Test IQ PL: API + nginx + kopia zapasowa (+ certbot w trybach https i cloudflare).
 # Uruchamiaj przez ../deploy.sh, który ustawia zmienne z deploy/.env.
 
 services:
@@ -41,6 +41,8 @@ services:
     volumes:
       - ./nginx/${NGINX_MODE:-http}:/etc/nginx/templates:ro
       - ./nginx/common.conf:/etc/nginx/snippets/common.conf:ro
+      - ./nginx/cloudflare-ips.conf:/etc/nginx/snippets/cloudflare-ips.conf:ro
+      - ./nginx/cloudflare-realip.conf:/etc/nginx/snippets/cloudflare-realip.conf:ro
       - ./certbot/www:/var/www/certbot:ro
       - ./certbot/conf:/etc/letsencrypt:ro
     # przeładowanie co 6 h, żeby nginx podchwycił odnowione certyfikaty
