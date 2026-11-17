@@ -3,5 +3,5 @@
 // Strona wysyła wyniki na <apiUrl>/api/results i pobiera statystyki z
 // <apiUrl>/api/norms/<test>.
 window.TESTIQ_CONFIG = {
-  apiUrl: '',
+  apiUrl: 'https://api.testyzdolnosci.pl',
 };
