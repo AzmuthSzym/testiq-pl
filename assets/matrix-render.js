@@ -60,12 +60,13 @@
     const rad = cell.angle * Math.PI / 4;
     for (const [x, y] of POSITIONS[cell.count]) {
       const fill = cell.fill === 0 ? 'mfig empty' : cell.fill === 1 ? 'mfig' : 'mfig solid';
-      const style = cell.fill === 1 ? `fill:url(#${id})` : '';
       // współrzędne liczone wprost (bez transform: scale), żeby kreskowanie
       // miało tę samą gęstość w każdej figurze
       const shape = SHAPES[cell.shape] === null
-        ? el('circle', { cx: x, cy: y, r, class: fill, style })
-        : el('path', { d: placePath(SHAPES[cell.shape], x, y, r, rad), class: fill, style });
+        ? el('circle', { cx: x, cy: y, r, class: fill })
+        : el('path', { d: placePath(SHAPES[cell.shape], x, y, r, rad), class: fill });
+      // przez CSSOM, nie atrybut style (atrybut blokuje polityka CSP strony)
+      if (cell.fill === 1) shape.style.fill = `url(#${id})`;
       svg.appendChild(shape);
     }
     return svg;

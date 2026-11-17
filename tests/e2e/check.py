@@ -25,6 +25,16 @@ def with_api(context):
         content_type="application/javascript",
         body=f"window.TESTIQ_CONFIG = {{ apiUrl: '{API}' }};"))
 
+    # CSP na stronach pozwala łączyć się tylko z prawdziwym API; w sieci
+    # testowej podmieniamy ten adres na testowy
+    def html(route):
+        resp = route.fetch()
+        # Playwright (wait_for_function) potrzebuje eval; strony same go nie używają
+        body = (resp.text().replace("https://api.testyzdolnosci.pl", API)
+                .replace("script-src 'self'", "script-src 'self' 'unsafe-eval'"))
+        route.fulfill(response=resp, body=body)
+    context.route(lambda url: url.endswith("/") or url.endswith(".html"), html)
+
 
 def new_page(browser, **kw):
     context = browser.new_context(**kw)

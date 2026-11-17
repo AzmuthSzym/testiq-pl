@@ -1,0 +1,205 @@
+(function () {
+  'use strict';
+  const C = window.CubeCore, R = window.CubeRender, T = window.TestIQ;
+  const TEST_ID = 'kostka-v2';
+  // Wersja generatora (assets/cube-core.js): 2 = ruchy, które się nie znoszą.
+  const GEN_VERSION = 2;
+  const N_ITEMS = 20;
+  const TIME_LIMIT = 8 * 60;
+  const LETTERS = 'ABCDEF';
+  const app = document.getElementById('app');
+
+  const store = T.store;
+
+  const h = (html) => { app.innerHTML = html; window.scrollTo(0, 0); };
+
+  // Blok zadania: kostka startowa + ruchy + 6 opcji.
+  function renderItem(container, item, onPick) {
+    const stem = document.createElement('div');
+    stem.className = 'stem';
+    const fig0 = document.createElement('figure');
+    fig0.appendChild(R.drawCube(item.start, item.faces, 'big'));
+    stem.appendChild(fig0);
+    item.moves.forEach((mi, i) => {
+      const f = document.createElement('figure');
+      f.appendChild(R.drawMove(C.MOVES[mi], 'small'));
+      const cap = document.createElement('figcaption');
+      cap.textContent = String(i + 1);
+      f.appendChild(cap);
+      stem.appendChild(f);
+    });
+    container.appendChild(stem);
+    const grid = document.createElement('div');
+    grid.className = 'options';
+    item.options.forEach((Ro, i) => {
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Odpowiedź ' + LETTERS[i]);
+      const l = document.createElement('div');
+      l.className = 'lbl';
+      l.textContent = LETTERS[i];
+      b.appendChild(l);
+      b.appendChild(R.drawCube(Ro, item.faces));
+      b.addEventListener('click', () => onPick(i, b, grid));
+      grid.appendChild(b);
+    });
+    container.appendChild(grid);
+    // klawisze A–F (albo 1–6) działają jak kliknięcie
+    T.onKeys((e) => {
+      const i = T.choiceFromKey(e, item.options.length);
+      if (i >= 0) { e.preventDefault(); grid.children[i].click(); }
+    });
+  }
+
+  // ---------- ekran 1: opis + przykład ----------
+  function intro() {
+    h(`
+      <div class="kicker">Zdolności przestrzenne · 20 zadań · 8 minut</div>
+      <h1>Obracanie kostki</h1>
+      <p class="lead">Test wyobraźni przestrzennej: trzeba w myślach śledzić, jak zmienia się położenie kostki po kolejnych obrotach.</p>
+      <p>Kostka jest obracana o ćwierć obrotu, krok po kroku, tak jak pokazują strzałki. Ścianka ze strzałką przetacza się w kierunku, w który strzałka wskazuje. Wybierz obrazek, który pokazuje kostkę po wszystkich obrotach.</p>
+      <p>Ścianki, których na początku nie widać, są puste. Na obrazkach z odpowiedziami też będą puste.</p>
+      <p>Odpowiadasz kliknięciem albo klawiszem A–F. Nie da się wrócić do poprzedniego zadania. Nie odświeżaj strony w trakcie testu: odpowiedzi przepadną.</p>
+      ${T.RULES_NOTE}
+      <h2>Przykład</h2>
+      <div id="example"></div>
+      <p class="note" id="exnote" aria-live="polite">Wybierz odpowiedź, żeby zobaczyć, czy jest poprawna.</p>
+      ${T.META_FORM}
+      <p><button class="btn" id="start">Rozpocznij test</button></p>
+    `);
+    const ex = C.generateItems('kostka-przyklad', 4)[0];
+    let done = false;
+    renderItem(document.getElementById('example'), ex, (i, b, grid) => {
+      if (done) return;
+      done = true;
+      b.classList.add('picked');
+      grid.children[ex.answer].classList.add('right');
+      document.getElementById('exnote').textContent = i === ex.answer
+        ? 'Dobrze. Na prawdziwym teście nie zobaczysz, czy odpowiedź jest poprawna.'
+        : 'Poprawna odpowiedź to ' + LETTERS[ex.answer] + '. Na prawdziwym teście nie zobaczysz, czy odpowiedź jest poprawna.';
+    });
+    document.getElementById('start').addEventListener('click', () => {
+      run(T.readMeta());
+    });
+  }
+
+  // ---------- ekran 2: test ----------
+  function run(meta) {
+    const items = C.generateItems(TEST_ID, N_ITEMS, { version: GEN_VERSION });
+    const responses = [];
+    const t0 = Date.now();
+    let idx = 0, tShown = 0, finished = false;
+    const focus = T.focusWatch();
+
+    h(`
+      <div class="testbar"><span class="kicker" id="count" aria-live="polite"></span><span class="timer" id="timer" role="timer" aria-label="Pozostały czas"></span></div>
+      <div class="progress"><div id="bar"></div></div>
+      <p class="question">Która kostka pokazuje położenie po wszystkich obrotach?</p>
+      <div id="item"></div>
+    `);
+    const timerEl = document.getElementById('timer');
+    const tick = () => {
+      const left = Math.max(0, TIME_LIMIT - Math.floor((Date.now() - t0) / 1000));
+      timerEl.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+      timerEl.classList.toggle('low', left <= 60);
+      if (left === 0) finish(true);
+    };
+    const timer = setInterval(tick, 250);
+    T.guardUnload(true);
+    tick();
+
+    function show() {
+      if (finished) return;
+      document.getElementById('count').textContent = 'Zadanie ' + (idx + 1) + ' z ' + N_ITEMS;
+      document.getElementById('bar').style.width = (idx / N_ITEMS * 100) + '%';
+      const box = document.getElementById('item');
+      box.innerHTML = '';
+      tShown = Date.now();
+      // jedna odpowiedź na zadanie: drugie kliknięcie (albo klawisz) przed
+      // pokazaniem kolejnego zadania nie może trafić do następnego
+      let answered = false;
+      renderItem(box, items[idx], (i, b) => {
+        if (answered || finished) return;
+        answered = true;
+        b.classList.add('picked');
+        responses.push({
+          item: idx + 1, moves: items[idx].moves.length, choice: i,
+          correct: i === items[idx].answer, ms: Date.now() - tShown, ...focus.mark(),
+        });
+        idx++;
+        setTimeout(() => (idx < N_ITEMS ? show() : finish(false)), 180);
+      });
+    }
+
+    function finish(timedOut) {
+      if (finished) return;
+      finished = true;
+      clearInterval(timer);
+      focus.stop();
+      T.guardUnload(false);
+      T.onKeys(null);
+      const durationMs = Date.now() - t0;
+      const complete = (assist) => {
+        const result = {
+          test: TEST_ID, version: GEN_VERSION, participant: T.participantId(),
+          startedAt: new Date(t0).toISOString(), durationMs, timedOut,
+          meta: Object.assign({}, meta, assist ? { assist } : {}), responses,
+        };
+        store.set('testiq-last-' + TEST_ID, JSON.stringify(result));
+        // statystyki pobieramy dopiero po zapisie, żeby obejmowały ten wynik
+        results(result, T.sendResult(result));
+      };
+      // pytanie o pomoc tylko wtedy, gdy wynik ma trafić do norm
+      if (T.willSend(meta)) T.askAssist(document.getElementById('app'), complete);
+      else complete(null);
+    }
+    show();
+  }
+
+  // ---------- ekran 3: wynik ----------
+  function results(r, sent) {
+    const sc = T.scoreOf(TEST_ID, r.responses);
+    const score = sc.points;
+    const rows = [1, 2, 3, 4].map((m) => {
+      const sub = r.responses.filter((x) => x.moves === m);
+      const ok = T.fmtPoints(sub.reduce((a, x) => a + T.pointsFor(TEST_ID, x), 0));
+      const ms = sub.length ? Math.round(sub.reduce((a, x) => a + x.ms, 0) / sub.length / 100) / 10 : null;
+      return `<tr><td>${m} ${m === 1 ? 'obrót' : 'obroty'}</td><td>${ok} / 5</td><td>${ms === null ? '—' : ms + ' s'}</td></tr>`;
+    }).join('');
+    const fast = r.responses.filter((x) => x.ms < 2000).length;
+    h(`
+      <div class="kicker">Wynik</div>
+      <h1>Obracanie kostki</h1>
+      <div class="card">
+        <div class="score">${T.fmtPoints(score)} <span class="note">/ ${N_ITEMS}</span></div>
+        ${T.scoreNote(sc)}
+        <p class="note">Losowe zgadywanie daje średnio ok. 3 punkty.${r.timedOut ? ' Skończył się czas.' : ''}</p>
+        ${fast >= 5 ? `<p class="note">${fast} odpowiedzi padło w mniej niż 2 sekundy. Taki wynik może nie odzwierciedlać twoich możliwości.</p>` : ''}
+      </div>
+      <table class="res">
+        <tr><th>Poziom</th><th>Poprawne</th><th>Średni czas</th></tr>
+        ${rows}
+      </table>
+      <h2>Na tle innych uczestników</h2>
+      <div id="compare"></div>
+      <h2>Co ten wynik znaczy</h2>
+      <p>Wynik na skali IQ liczymy względem innych uczestników. Wystarczy 30 osób, żeby podać estymację wstępną z przedziałem błędu, który zawęża się z każdą kolejną osobą. Jeśli podasz rok urodzenia, a w twojej grupie wieku jest dość osób, porównujemy cię z rówieśnikami.</p>
+      <p><button class="btn ghost" id="dl">Pobierz dane (JSON)</button> <a class="btn ghost" href="../">Wróć</a></p>
+    `);
+    const compare = document.getElementById('compare');
+    if (T.assisted(r.meta)) compare.innerHTML = T.ASSISTED_NOTE;
+    Promise.resolve(sent).then((ok) => {
+      if (!T.assisted(r.meta)) T.renderComparison(compare, TEST_ID, score, r.meta);
+      T.sentNote(compare, ok);
+    });
+    document.getElementById('dl').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));
+      a.download = TEST_ID + '-' + r.startedAt.slice(0, 10) + '.json';
+      a.click();
+    });
+  }
+
+  intro();
+})();

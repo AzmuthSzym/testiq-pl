@@ -1,0 +1,75 @@
+(function () {
+  'use strict';
+  const S = window.SeriesCore, T = window.TestIQ;
+  const N_ITEMS = 16;
+  const fmt = (x) => String(x).replace('-', '−');
+
+  function renderItem(box, item, answer, ctx) {
+    T.onKeys(null);
+    const row = document.createElement('div');
+    row.className = 'series';
+    row.setAttribute('aria-label', 'Ciąg: ' + item.shown.join(', ') + ', dalej?');
+    for (const x of item.shown) {
+      const c = document.createElement('span');
+      c.className = 'term';
+      c.textContent = fmt(x);
+      row.appendChild(c);
+    }
+    const q = document.createElement('span');
+    q.className = 'term q';
+    q.textContent = '?';
+    row.appendChild(q);
+    box.appendChild(row);
+
+    const form = document.createElement('form');
+    form.className = 'answer-row';
+    form.innerHTML = `
+      <label class="sr-only" for="ans-${ctx.example ? 'ex' : 'test'}">Następna liczba</label>
+      <input id="ans-${ctx.example ? 'ex' : 'test'}" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="liczba">
+      <button class="btn" type="submit">Dalej</button>
+      <button class="btn ghost" type="button" data-skip>Nie wiem</button>
+      <span class="note err" aria-live="polite"></span>`;
+    box.appendChild(form);
+    const input = form.querySelector('input');
+    const err = form.querySelector('.err');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const v = S.parseAnswer(input.value);
+      if (v === null) { err.textContent = 'Wpisz liczbę całkowitą.'; input.focus(); return; }
+      if (answer(String(v), v === item.answer) !== false) {
+        input.disabled = true;
+        if (ctx.example) q.textContent = fmt(item.answer);
+      }
+    });
+    form.querySelector('[data-skip]').addEventListener('click', () => {
+      if (answer('', false) !== false) {
+        input.disabled = true;
+        if (ctx.example) q.textContent = fmt(item.answer);
+      }
+    });
+    if (!ctx.example) input.focus({ preventScroll: true });
+  }
+
+  TestRunner.start({
+    id: 'ciagi-v1',
+    version: 1,
+    kicker: 'Rozumowanie liczbowe · 16 zadań · 12 minut',
+    title: 'Ciągi liczbowe',
+    lead: 'Test rozumowania indukcyjnego na liczbach: trzeba odkryć regułę, według której powstaje ciąg, i podać następną liczbę.',
+    instructions: `
+      <p>Każde zadanie to kilka liczb ułożonych według jednej reguły. Wpisz liczbę, która powinna być następna, i naciśnij Enter albo „Dalej”. Odpowiedzi nie trzeba wybierać z listy.</p>
+      <p>Reguły są różne: na przykład stałe dodawanie albo mnożenie, różnice, które same się zmieniają, dwa działania na zmianę albo dwa ciągi przeplatane ze sobą. Wszystkie liczby są całkowite. Liczyć możesz w pamięci albo na kartce, ale bez kalkulatora.</p>
+      <p>Jeśli nie znasz odpowiedzi, wybierz „Nie wiem”. Zgadywanie nic nie daje, bo trafienie w przypadkową liczbę jest prawie niemożliwe. Nie da się wrócić do poprzedniego zadania. Nie odświeżaj strony w trakcie testu: odpowiedzi przepadną.</p>`,
+    timeLimit: 12 * 60,
+    items: () => S.generateItems('ciagi-v1', N_ITEMS),
+    question: 'Jaka liczba jest następna?',
+    renderItem,
+    example: () => S.generateItems('ciagi-przyklad', 4)[0],
+    exampleFeedback: (choice, correct, item) => (correct ? 'Dobrze.' : 'Poprawna odpowiedź to ' + fmt(item.answer) + ' (reguła: ' + item.desc + ').'),
+    levelOf: (item) => item.level,
+    levelLabel: (lv) => ['', 'Poziom 1 (stałe działanie)', 'Poziom 2', 'Poziom 3', 'Poziom 4'][lv],
+    chanceNote: 'Przy zgadywaniu wynik jest bliski zeru, bo odpowiedź się wpisuje.',
+    meaning: `<p>Wynik na skali IQ liczymy względem innych uczestników. Wystarczy 30 osób, żeby podać estymację wstępną z przedziałem błędu, który zawęża się z każdą kolejną osobą. Jeśli podasz rok urodzenia, a w twojej grupie wieku jest dość osób, porównujemy cię z rówieśnikami.</p>
+      <p class="note">Ciągi liczbowe mierzą rozumowanie indukcyjne na materiale liczbowym. Wynik zależy też trochę od sprawności rachunkowej, dlatego warto go porównywać z wynikiem matryc, które liczb nie wymagają.</p>`,
+  });
+})();

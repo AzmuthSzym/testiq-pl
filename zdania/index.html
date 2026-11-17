@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.testyzdolnosci.pl; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Zdania — Test IQ PL</title>
 <link rel="stylesheet" href="../assets/fonts.css">
 <link rel="stylesheet" href="../assets/style.css">
@@ -24,88 +26,6 @@
 <script src="../assets/testiq-common.js"></script>
 <script src="../assets/test-runner.js"></script>
 <script src="../assets/sentence-core.js"></script>
-<script>
-(function () {
-  'use strict';
-  const S = window.SentenceCore, T = window.TestIQ;
-  const LETTERS = 'ABCDE';
-  const TEST_ID = 'zdania-v1';
-
-  function renderItem(box, item, answer) {
-    const p = document.createElement('p');
-    p.className = 'sentence';
-    const gap = document.createElement('span');
-    gap.className = 'gap';
-    gap.textContent = '   ';
-    // znak interpunkcyjny tuż po luce trzyma się luki (bez przenoszenia do nowego wiersza)
-    const punct = (item.after.match(/^[,.;:!?…]+/) || [''])[0];
-    const keep = document.createElement('span');
-    keep.className = 'nowrap';
-    keep.append(gap, punct);
-    p.append(document.createTextNode(item.before), keep, document.createTextNode(item.after.slice(punct.length)));
-    box.appendChild(p);
-    const grid = document.createElement('div');
-    grid.className = 'vocab-options';
-    item.options.forEach((opt, i) => {
-      const b = document.createElement('button');
-      b.className = 'opt vocab-opt';
-      b.type = 'button';
-      b.innerHTML = `<span class="lbl">${LETTERS[i]}</span> `;
-      b.appendChild(document.createTextNode(opt));
-      b.addEventListener('click', () => {
-        if (answer(i, i === item.answer) !== false) {
-          b.classList.add('picked');
-          gap.textContent = opt;
-          gap.classList.add('filled');
-          if (box.closest('#example')) grid.children[item.answer].classList.add('right');
-        }
-      });
-      grid.appendChild(b);
-    });
-    box.appendChild(grid);
-    T.onKeys((e) => {
-      const i = T.choiceFromKey(e, item.options.length);
-      if (i >= 0) { e.preventDefault(); grid.children[i].click(); }
-    });
-  }
-
-  function unavailable() {
-    document.getElementById('app').innerHTML = `
-      <div class="kicker">Zdania</div>
-      <h1>Nie udało się wczytać zadań</h1>
-      <p>Odśwież stronę. Jeśli to nie pomoże, spróbuj później.</p>
-      <p><a class="btn ghost" href="../">Wróć</a></p>`;
-  }
-
-  fetch('items.json').then((r) => (r.ok ? r.json() : null)).catch(() => null).then((data) => {
-    const items = S.buildItems(data && data.items, TEST_ID);
-    if (!items) { unavailable(); return; }
-    const example = { level: 0, before: 'Zrobiło się ciemno, więc ', after: ' światło w pokoju.',
-      options: ['zapaliłem', 'zgubiłem', 'zjadłem', 'pomalowałem', 'przeczytałem'], answer: 0 };
-    TestRunner.start({
-      id: TEST_ID,
-      version: 1,
-      kicker: 'Rozumienie słów · ' + items.length + ' zadań · 8 minut',
-      title: 'Zdania',
-      lead: 'Test znajomości słów w kontekście: trzeba wybrać słowo, które najlepiej pasuje do zdania.',
-      instructions: `
-        <p>Zobaczysz zdanie z luką i pięć słów. Wybierz to, które najlepiej pasuje do sensu zdania. Wszystkie słowa pasują gramatycznie, ale tylko jedno ma właściwe znaczenie. Zdania są coraz trudniejsze.</p>
-        <p>Odpowiadasz kliknięciem albo klawiszem A–E. Jeśli nie znasz słowa, wybierz najbardziej prawdopodobną odpowiedź. Nie korzystaj ze słownika ani z wyszukiwarki, bo wynik straci sens.</p>`,
-      timeLimit: 8 * 60,
-      items: () => items,
-      question: 'Które słowo pasuje w lukę?',
-      renderItem,
-      example: () => example,
-      exampleFeedback: (choice, correct) => (correct ? 'Dobrze.' : 'Poprawna odpowiedź to A (zapaliłem).'),
-      levelOf: (item) => item.level,
-      levelLabel: (lv) => ['', 'Poziom 1 (słowa częste)', 'Poziom 2', 'Poziom 3 (słowa rzadkie)'][lv] || 'Poziom ' + lv,
-      chanceNote: 'Losowe zgadywanie daje średnio 5 punktów.',
-      meaning: `<p>Wynik na skali IQ liczymy względem innych uczestników, od 30 osób jako estymację wstępną z przedziałem błędu.</p>
-        <p class="note">Ten test mierzy wiedzę językową (tzw. inteligencję skrystalizowaną). Zależy od wykształcenia, czytania i tego, czy polski jest twoim pierwszym językiem, więc nie należy go porównywać z wynikami osób z innym doświadczeniem językowym.</p>
-        <p class="note">To wersja próbna: zadania napisaliśmy sami i sprawdzamy, czy każde ma jedną jednoznaczną odpowiedź. Po zebraniu danych słabe zadania wymienimy (jako nowa wersja testu).</p>`,
-    });
-  });
-})();
-</script>
+<script src="app.js"></script>
 </body>
 </html>
