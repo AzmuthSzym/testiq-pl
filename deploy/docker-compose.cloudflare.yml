@@ -1,0 +1,14 @@
+# Dodatek dla trybu "cloudflare" (deploy.sh dołącza go automatycznie).
+# Docker przekazuje połączenia IPv6 do kontenera przez własny proxy i podmienia
+# adres nadawcy, więc nginx nie widziałby adresów Cloudflare. Dlatego nginx
+# działa w sieci hosta (słucha na portach 80 i 443 serwera), a API jest
+# dostępne dla niego tylko lokalnie pod 127.0.0.1:8000.
+services:
+  api:
+    ports: !override
+      - "127.0.0.1:8000:8000"
+  nginx:
+    network_mode: host
+    ports: !reset []
+    extra_hosts:
+      - "api:127.0.0.1"

@@ -25,7 +25,9 @@ NGINX_MODE="${NGINX_MODE:-http}"
 compose() {
   local profiles=()
   [[ "$NGINX_MODE" == "https" || "$NGINX_MODE" == "cloudflare" ]] && profiles=(--profile letsencrypt)
-  docker compose -f "$DEPLOY/docker-compose.yml" --project-name testiq "${profiles[@]}" "$@"
+  local files=(-f "$DEPLOY/docker-compose.yml")
+  [[ "$NGINX_MODE" == "cloudflare" ]] && files+=(-f "$DEPLOY/docker-compose.cloudflare.yml")
+  docker compose "${files[@]}" --project-name testiq "${profiles[@]}" "$@"
 }
 
 run_tests() {
@@ -48,6 +50,9 @@ prepare_dirs() {
 }
 
 health_url() {
+  # z certyfikatem: przez publiczny adres (w trybie cloudflare serwer odrzuca
+  # połączenia spoza Cloudflare, także lokalne)
+  if [[ "$NGINX_MODE" != "http" ]]; then echo "https://$DOMAIN/api/health"; return; fi
   local bind="${HTTP_BIND:-127.0.0.1:8080}"
   bind="${bind/0.0.0.0/127.0.0.1}"
   echo "http://$bind/api/health"
@@ -61,7 +66,7 @@ case "${1:-}" in
     run_tests
     compose build api
     prepare_dirs
-    if [[ "$NGINX_MODE" != "http" && ! -d "$DEPLOY/certbot/conf/live/${DOMAIN:-}" ]]; then
+    if [[ "$NGINX_MODE" != "http" && ! -f "$DEPLOY/certbot/conf/renewal/${DOMAIN:-}.conf" ]]; then
       echo "Brak certyfikatu dla '${DOMAIN:-}'. Najpierw: ./deploy.sh cert" >&2
       exit 1
     fi
