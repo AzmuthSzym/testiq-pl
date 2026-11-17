@@ -500,4 +500,4 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
 - **Usuwanie na prośbę e-mailem:** `./deploy.sh delete <id>`.
 - **Okres przechowywania:** kontener backup codziennie usuwa wyniki starsze niż `RETAIN_DAYS` (1095), z kopii znikają po 14 dniach.
 - **Zgoda w formularzu:** zamiast „anonimowe” (dane są pseudonimowe) „bez imienia i danych kontaktowych”, z informacją o wycofaniu zgody.
-- **Do startu zbierania:** działający adres support@ (Email Routing w Cloudflare) i `apiUrl` w `assets/config.js`.
+- **Zbieranie wyników ruszyło (2026-11-17):** `apiUrl` = https://api.testyzdolnosci.pl, sprawdzone na żywo wysłanie i usunięcie wyniku. support@testyzdolnosci.pl działa przez Email Routing w Cloudflare (przekierowanie na skrzynkę administratora).
