@@ -14,4 +14,5 @@ TESTS: dict[str, dict] = {
     "pamiec-v1": {"items": 28, "max_score": 28},
     # language: test językowy; do norm wchodzą tylko osoby z polskim jako językiem ojczystym
     "slownictwo-v1": {"items": 20, "max_score": 20, "language": True},
+    "zdania-v1": {"items": 25, "max_score": 25, "language": True},
 }

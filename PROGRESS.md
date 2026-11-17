@@ -483,3 +483,12 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
     nowa wersja testu w normach (inna skala wyniku).
   - Odrzucona propozycja: ukryta kara za czas (kara dla wolnych uczciwych osób i wynik
     wprowadzający w błąd; jawna zasada lepiej też odstrasza).
+
+## Test „Zdania” (2026-11-17)
+
+- **Format:** zdanie z luką, 5 słów do wyboru. Dystraktory mają tę samą formę gramatyczną co odpowiedź, więc decyduje znaczenie. Inspiracja: angielskie otwarte testy słownictwa (synonimy, uzupełnianie zdań). Zdania napisane od zera, nic nie skopiowane.
+- **Kandydaci:** 68 zadań w `vocab/kandydaci/zdania_kandydaci.py` (poza repozytorium). Wersja bez odpowiedzi do przeglądu na Discordzie: `zdania-discord.txt`.
+- **zdania-v1:** 25 zadań (6 łatwych, 10 średnich, 9 trudnych), 8 minut. Lista w `vocab/zdania_publish.py`, wynik w `zdania/items.json`. Logika w `assets/sentence-core.js`: kolejność w obrębie poziomu z ziarna, odpowiedzi równo na A–E.
+- **Normy:** tylko polski jako język ojczysty (`language: True`).
+- **Status:** wersja próbna, bez ręcznego przeglądu przez native speakera poza autorem zadań. Po przeglądzie z Discorda i pilotażu: analiza zadań (trudność, moc różnicująca, atrakcyjność dystraktorów), poprawki jako `zdania-v2`.
+- **Testy:** `tests/sentence.test.js`, scenariusz 10b w e2e.

@@ -364,6 +364,30 @@ def main():
         check(not errors, f"słownictwo: bez błędów JS: {errors}")
         ctx.close()
 
+        # 10b. Zdania: prawdziwy bank, 20 dobrze i 5 źle.
+        for name, opts in [("zdania-telefon-ciemny", dict(viewport={"width": 390, "height": 844}, color_scheme="dark",
+                                                            device_scale_factor=2)),
+                           ("zdania-komputer", dict(viewport={"width": 1000, "height": 900}))]:
+            ctx, page, errors = new_page(browser, **opts)
+            page.goto(f"{SITE}/zdania/")
+            page.check("#consent")
+            page.click("#start")
+            keys = page.evaluate("fetch('items.json').then(r => r.json())"
+                                 ".then(d => SentenceCore.buildItems(d.items, 'zdania-v1').map(i => i.answer))")
+            check(len(keys) == 25, f"zdania: 25 zadań ({len(keys)})")
+            for i, k in enumerate(keys):
+                page.wait_for_function(f"document.getElementById('count').textContent === 'Zadanie {i + 1} z 25'")
+                if i == 7:
+                    page.screenshot(path=f"/out/{name}.png", full_page=True)
+                page.keyboard.press("ABCDE"[k if i < 20 else (k + 1) % 5])
+            answer_assist(page, "nie")
+            page.wait_for_selector("#compare >> text=Zbieramy dane")
+            check(page.text_content(".score").strip().startswith("20"), f"zdania: wynik 20 ({page.text_content('.score').strip()})")
+            if name == "zdania-komputer":
+                page.screenshot(path="/out/zdania-wynik.png", full_page=True)
+            check(not errors, f"zdania: bez błędów JS: {errors}")
+            ctx.close()
+
         # 11. Wynik łączny na stronie głównej i IQ na ekranie wyniku (normy z API
         #     podstawione: N = 200, rzetelność 0,8 -> estymacja wstępna).
         ctx, page, errors = new_page(browser, viewport={"width": 1000, "height": 1000})
@@ -392,7 +416,7 @@ def main():
         ctx, page, errors = new_page(browser, viewport={"width": 390, "height": 844}, device_scale_factor=2)
         hosts = set()
         page.on("request", lambda r: hosts.add(r.url.split("/")[2]))
-        for path in ["", "metodologia/", "prywatnosc/", "zrodla/", "kostka/", "matryce/", "ciagi/", "pamiec/", "slownictwo/"]:
+        for path in ["", "metodologia/", "prywatnosc/", "zrodla/", "kostka/", "matryce/", "ciagi/", "pamiec/", "slownictwo/", "zdania/"]:
             page.goto(f"{SITE}/{path}")
             page.wait_for_load_state("networkidle")
             width = page.evaluate("document.documentElement.scrollWidth")

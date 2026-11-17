@@ -9,6 +9,7 @@
     { id: 'ciagi-v1', name: 'Ciągi liczbowe', href: 'ciagi/' },
     { id: 'pamiec-v1', name: 'Pamięć robocza', href: 'pamiec/' },
     { id: 'slownictwo-v1', name: 'Słownictwo', href: 'slownictwo/' },
+    { id: 'zdania-v1', name: 'Zdania', href: 'zdania/' },
   ];
   // Założony ładunek czynnika ogólnego każdego testu, dopóki nie oszacujemy
   // go z danych (korelacje między testami u tych samych uczestników).

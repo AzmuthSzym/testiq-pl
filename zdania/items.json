@@ -1,0 +1,280 @@
+{
+ "version": 1,
+ "items": [
+  {
+   "level": 1,
+   "sentence": "Po całym dniu pracy w ogrodzie był tak ___, że zasnął zaraz po kolacji.",
+   "answer": "wyczerpany",
+   "distractors": [
+    "rozbawiony",
+    "zaciekawiony",
+    "oburzony",
+    "zawstydzony"
+   ]
+  },
+  {
+   "level": 1,
+   "sentence": "Ta zupa jest zbyt ___, dosyp trochę soli.",
+   "answer": "mdła",
+   "distractors": [
+    "słona",
+    "ostra",
+    "gorąca",
+    "kwaśna"
+   ]
+  },
+  {
+   "level": 1,
+   "sentence": "Firma ogłosiła ___ i wszyscy pracownicy stracili pracę.",
+   "answer": "upadłość",
+   "distractors": [
+    "rekrutację",
+    "promocję",
+    "ekspansję",
+    "dywidendę"
+   ]
+  },
+  {
+   "level": 1,
+   "sentence": "Nie umiał podjąć decyzji i długo się ___.",
+   "answer": "wahał",
+   "distractors": [
+    "śpieszył",
+    "cieszył",
+    "chwalił",
+    "złościł"
+   ]
+  },
+  {
+   "level": 1,
+   "sentence": "Woda w jeziorze była tak ___, że widzieliśmy dno.",
+   "answer": "przejrzysta",
+   "distractors": [
+    "mętna",
+    "głęboka",
+    "zimna",
+    "wzburzona"
+   ]
+  },
+  {
+   "level": 1,
+   "sentence": "Jego zeznania były ___: najpierw mówił, że był w domu, potem, że w pracy.",
+   "answer": "sprzeczne",
+   "distractors": [
+    "spójne",
+    "zgodne",
+    "wiarygodne",
+    "rzetelne"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Jego wypowiedź była tak ___, że nikt nie wiedział, co właściwie miał na myśli.",
+   "answer": "zawiła",
+   "distractors": [
+    "zwięzła",
+    "dobitna",
+    "rzeczowa",
+    "przekonująca"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Księgowa była niezwykle ___: każdą fakturę sprawdzała po trzy razy.",
+   "answer": "skrupulatna",
+   "distractors": [
+    "roztargniona",
+    "niedbała",
+    "rozrzutna",
+    "małomówna"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Odpowiedź była ___: jedno słowo i nic więcej.",
+   "answer": "lakoniczna",
+   "distractors": [
+    "wylewna",
+    "rozwlekła",
+    "zawiła",
+    "wyczerpująca"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Zamiast porządnie naprawić dach, zrobił tylko ___ łatę z folii.",
+   "answer": "prowizoryczną",
+   "distractors": [
+    "solidną",
+    "trwałą",
+    "fachową",
+    "kosztowną"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Szef ___ problem i mówił, że to drobiazg, choć firma traciła klientów.",
+   "answer": "bagatelizował",
+   "distractors": [
+    "wyolbrzymiał",
+    "nagłaśniał",
+    "analizował",
+    "dramatyzował"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Decyzja była ___: podjął ją w pięć minut, nie sprawdzając żadnych ofert.",
+   "answer": "pochopna",
+   "distractors": [
+    "przemyślana",
+    "wyważona",
+    "rozsądna",
+    "ostrożna"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Rodzice byli wobec niego zbyt ___: nigdy nie wyciągali konsekwencji z jego wybryków.",
+   "answer": "pobłażliwi",
+   "distractors": [
+    "surowi",
+    "wymagający",
+    "konsekwentni",
+    "zasadniczy"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Wyszedł z sali ___, trzaskając drzwiami, żeby wszyscy widzieli jego niezadowolenie.",
+   "answer": "ostentacyjnie",
+   "distractors": [
+    "dyskretnie",
+    "ukradkiem",
+    "niepostrzeżenie",
+    "potulnie"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Pytany o szczegóły, odpowiadał ___, tak żeby nikt nie mógł mu niczego zarzucić.",
+   "answer": "wymijająco",
+   "distractors": [
+    "wprost",
+    "dosadnie",
+    "otwarcie",
+    "kategorycznie"
+   ]
+  },
+  {
+   "level": 2,
+   "sentence": "Jego ___ uwagi sprawiały przykrość, choć udawał, że tylko żartuje.",
+   "answer": "uszczypliwe",
+   "distractors": [
+    "życzliwe",
+    "pochlebne",
+    "taktowne",
+    "budujące"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Mimo poważnych kłopotów zachowywał się ___, jakby nic się nie stało.",
+   "answer": "niefrasobliwie",
+   "distractors": [
+    "posępnie",
+    "nerwowo",
+    "ponuro",
+    "trwożliwie"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Jego styl jest ___: zdania ciągną się przez pół strony i pełno w nich ozdobników.",
+   "answer": "kwiecisty",
+   "distractors": [
+    "lapidarny",
+    "oszczędny",
+    "ascetyczny",
+    "surowy"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Na pochlebstwa pozostawał ___: ani go nie cieszyły, ani nie irytowały.",
+   "answer": "niewzruszony",
+   "distractors": [
+    "łasy",
+    "czuły",
+    "podatny",
+    "wrażliwy"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Był prawdziwym ___: kochał wygodne fotele, wykwintne jedzenie i długie kąpiele.",
+   "answer": "sybarytą",
+   "distractors": [
+    "ascetą",
+    "pustelnikiem",
+    "abnegatem",
+    "purytaninem"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Ministrowi zarzucano ___, bo na stanowiska powoływał krewnych i znajomych.",
+   "answer": "nepotyzm",
+   "distractors": [
+    "populizm",
+    "absentyzm",
+    "legalizm",
+    "pacyfizm"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Zamiast działać, wciąż odkładał decyzje na później. Był typowym ___.",
+   "answer": "kunktatorem",
+   "distractors": [
+    "hazardzistą",
+    "pedantem",
+    "malkontentem",
+    "karierowiczem"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Jego żarty były ___: ani śmieszne, ani obraźliwe, po prostu bez wyrazu.",
+   "answer": "miałkie",
+   "distractors": [
+    "błyskotliwe",
+    "dosadne",
+    "cięte",
+    "frywolne"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Był ___ w słowach i nigdy nie powiedział nic, co mogłoby kogoś urazić.",
+   "answer": "oględny",
+   "distractors": [
+    "obcesowy",
+    "nieokrzesany",
+    "gruboskórny",
+    "bezceremonialny"
+   ]
+  },
+  {
+   "level": 3,
+   "sentence": "Dziecko było ___ i nie słuchało żadnych poleceń.",
+   "answer": "krnąbrne",
+   "distractors": [
+    "posłuszne",
+    "uległe",
+    "potulne",
+    "karne"
+   ]
+  }
+ ]
+}
