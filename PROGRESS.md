@@ -508,4 +508,4 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
 - API: nagłówki nosniff, CSP `default-src 'none'; frame-ancestors 'none'`, Referrer-Policy no-referrer (obok HSTS).
 - Kontenery api i backup: system plików tylko do odczytu, cap_drop ALL, no-new-privileges; nginx i certbot: no-new-privileges.
 - Sprawdzone: SSH tylko klucze, bez haseł; połączenia z pominięciem Cloudflare odrzucane; CORS tylko dla domen strony; brak sekretów w repozytorium i historii; strony na żywo bez błędów CSP, wysłanie i usunięcie wyniku działa.
-- Do zrobienia przez właściciela: rekord DMARC w Cloudflare, kopia zapasowa poza serwerem.
+- DMARC dodany (p=reject, raporty do Cloudflare). Kopia poza serwerem odłożona na później (decyzja właściciela, 2026-11-17).
