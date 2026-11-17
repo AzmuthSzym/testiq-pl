@@ -143,6 +143,27 @@ def main():
         check(not errors, f"bez błędów JS: {errors}")
         ctx.close()
 
+        # 1c. Usunięcie wyników na żądanie (Prywatność, „Twoje dane”).
+        ctx, page, errors = new_page(browser, viewport={"width": 390, "height": 844})
+        play_cube(page, 10)
+        page.wait_for_selector("text=Wynik został zapisany na serwerze")
+        check(page.request.get(f"{API}/api/norms/kostka-v2").json()["n"] == 2, "drugi uczestnik w normach")
+        page.click("text=Prywatność, „Twoje dane”")
+        page.wait_for_selector("#del-server")
+        pid = page.evaluate("localStorage.getItem('testiq-pid')")
+        check(page.text_content("#pid") == pid, "identyfikator pokazany na stronie prywatności")
+        page.screenshot(path="/out/prywatnosc-twoje-dane.png", full_page=True)
+        page.on("dialog", lambda d: d.accept())
+        page.click("#del-server")
+        page.wait_for_selector("#del-msg >> text=Usunięte wyniki: 1")
+        check(page.request.get(f"{API}/api/norms/kostka-v2").json()["n"] == 1, "po usunięciu wynik znika z norm")
+        page.click("#del-local")
+        page.wait_for_selector("text=nie ma żadnych danych z naszej strony")
+        check(page.evaluate("Object.keys(localStorage).filter(k => k.startsWith('testiq-')).length") == 0,
+              "dane z przeglądarki usunięte")
+        check(not errors, f"usuwanie: bez błędów JS: {errors}")
+        ctx.close()
+
         # 2. Bez zgody nic nie idzie do API.
         ctx, page, errors = new_page(browser)
         sent = []

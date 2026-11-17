@@ -292,3 +292,58 @@ def test_answers_after_leaving_tab_do_not_count(client):
     assert post(client, body).status_code == 201
     score = sqlite3.connect(client.db_path).execute("SELECT score FROM results").fetchone()[0]
     assert score == 9
+
+
+# ---------- usuwanie wyników (RODO) ----------
+
+def delete(client, participant, ip="1.2.3.4"):
+    return client.post("/api/delete", content=json.dumps({"participant": participant}),
+                       headers={"Content-Type": "application/json", "X-Real-IP": ip})
+
+
+def test_delete_removes_all_results_of_participant(client):
+    me, other = "11111111-2222-3333-4444-555555555555", "99999999-2222-3333-4444-555555555555"
+    post(client, make_result(me, started="2026-11-12T10:00:00Z"))
+    post(client, make_result(me, started="2026-11-12T11:00:00Z"))
+    post(client, make_result(other))
+    assert client.get("/api/norms/kostka-v1").json()["n"] == 2
+    r = delete(client, me)
+    assert r.status_code == 200 and r.json() == {"deleted": 2}
+    rows = sqlite3.connect(client.db_path).execute("SELECT participant FROM results").fetchall()
+    assert rows == [(other,)]
+    assert client.get("/api/norms/kostka-v1").json()["n"] == 1, "statystyki od razu bez usuniętego"
+    assert delete(client, me).json() == {"deleted": 0}
+
+
+@pytest.mark.parametrize("body", [{"participant": "krotki"}, {"participant": "x' OR 1=1 --"},
+                                  {"participant": "11111111-2222", "extra": 1}, {}])
+def test_delete_rejects_invalid(client, body):
+    r = client.post("/api/delete", content=json.dumps(body), headers={"Content-Type": "application/json"})
+    assert r.status_code == 422
+
+
+def test_delete_is_rate_limited(tmp_path):
+    app = create_app(db_path=str(tmp_path / "t.db"), trust_proxy=True, rate_limit=2)
+    with TestClient(app) as c:
+        codes = [delete(c, f"1111111{i}-2222-3333-4444-555555555555").status_code for i in range(3)]
+    assert codes == [200, 200, 429]
+
+
+def test_cors_allows_delete_from_site(client):
+    r = client.options("/api/delete", headers={"Origin": ORIGIN, "Access-Control-Request-Method": "POST",
+                                               "Access-Control-Request-Headers": "content-type"})
+    assert r.headers.get("access-control-allow-origin") == ORIGIN
+
+
+def test_purge_old_results(tmp_path):
+    from app.backup import purge_old
+    db = str(tmp_path / "t.db")
+    app = create_app(db_path=db, rate_limit=1000)
+    with TestClient(app) as c:
+        post(c, make_result("11111111-2222-3333-4444-555555555555"))
+        post(c, make_result("22222222-2222-3333-4444-555555555555"))
+        conn = sqlite3.connect(db)
+        conn.execute("UPDATE results SET received_on = '2020-01-01' WHERE participant LIKE '1111%'")
+        conn.commit()
+        assert purge_old(db, retain_days=3 * 365) == 1
+        assert conn.execute("SELECT COUNT(*) FROM results").fetchone()[0] == 1

@@ -49,8 +49,9 @@ płatnościami.
 
 ## 2. RODO
 
-- [ ] ⚖️ **Administrator danych i dane kontaktowe:** uzupełnić w szkicu
-  polityki prywatności (`prywatnosc/`).
+- [x] **Administrator danych i dane kontaktowe:** Marek Wójcik,
+  support@testyzdolnosci.pl (2026-11-17). ⚖️ Do sprawdzenia, czy sam e-mail bez
+  adresu pocztowego wystarcza.
 - [ ] ⚖️ **Podstawa prawna:** zgoda (art. 6 ust. 1 lit. a).
   - Czy treść zgody w formularzu jest wystarczająco konkretna i świadoma?
   - Czy wymaga osobnej zgody na każdy test, czy wystarczy jedna?
@@ -87,10 +88,12 @@ płatnościami.
 - [ ] ⚖️ **Prawa osób** (dostęp, usunięcie, wycofanie zgody):
   - potrzebny sposób na pokazanie uczestnikowi jego identyfikatora i adres do
     wysyłania żądań;
-  - w kodzie: endpoint lub narzędzie administracyjne do usunięcia wyników po
-    identyfikatorze (do zrobienia).
+  - zrobione (2026-11-17): identyfikator i przycisk „Usuń moje wyniki z
+    serwera” na stronie Prywatność (`POST /api/delete`), dla próśb e-mailem
+    `./deploy.sh delete <id>`.
 - [ ] ⚖️ **Okres przechowywania:**
-  - wpisać konkretny okres;
+  - wpisany okres: 3 lata od przesłania, usuwanie automatyczne
+    (`RETAIN_DAYS`, kontener backup). ⚖️ Czy okres jest uzasadniony celem?
   - kopie zapasowe są przechowywane 14 dni;
   - czy usunięcie na żądanie musi obejmować kopie?
 - [ ] ⚖️ **Rejestr czynności przetwarzania** i ewentualna ocena skutków

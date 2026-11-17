@@ -8,6 +8,7 @@
 #   ./deploy.sh cf-ips      odświeżenie listy adresów Cloudflare
 #   ./deploy.sh status      stan usług i odpowiedź /api/health
 #   ./deploy.sh backup      kopia bazy teraz (poza codzienną)
+#   ./deploy.sh delete ID   usunięcie wyników uczestnika (prośba e-mailem, RODO)
 #   ./deploy.sh down        zatrzymanie usług (dane zostają)
 #
 # Konfiguracja: deploy/.env (wzór: deploy/env.example).
@@ -98,6 +99,12 @@ case "${1:-}" in
     ;;
   backup)
     compose exec backup python -c "from app.backup import backup_once; print(backup_once())"
+    ;;
+  delete)
+    id="${2:-}"
+    [[ "$id" =~ ^[A-Za-z0-9-]{8,64}$ ]] || { echo "Użycie: ./deploy.sh delete <identyfikator uczestnika>" >&2; exit 1; }
+    compose exec -T api python -c "import sys; from app.db import Database; print('Usunięte wyniki:', Database('/data/results.db').delete_participant(sys.argv[1]))" "$id"
+    echo "Statystyki odświeżą się w ciągu minuty. Z kopii zapasowych wynik zniknie po ${KEEP_DAYS:-14} dniach."
     ;;
   down)
     compose down

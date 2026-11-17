@@ -39,6 +39,8 @@ class Database:
         self._conn.row_factory = sqlite3.Row
         if path != ":memory:":
             self._conn.execute("PRAGMA journal_mode=WAL")
+        # usunięte wiersze są nadpisywane zerami, a nie tylko oznaczane jako wolne
+        self._conn.execute("PRAGMA secure_delete=ON")
         self._conn.executescript(SCHEMA)
         # Baza sprzed dodania płci, języka i kraju: dopisz brakujące kolumny.
         cols = {r[1] for r in self._conn.execute("PRAGMA table_info(results)")}
@@ -76,6 +78,14 @@ class Database:
             )
             self._conn.commit()
             return cur.rowcount == 1
+
+    def delete_participant(self, participant: str) -> int:
+        """Usuwa wszystkie wyniki uczestnika (prawo do usunięcia danych).
+        Zwraca liczbę usuniętych wyników."""
+        with self._lock:
+            cur = self._conn.execute("DELETE FROM results WHERE participant = ?", (participant,))
+            self._conn.commit()
+            return cur.rowcount
 
     def first_attempts(self, test: str, native_only: bool = False) -> list[dict]:
         """Pierwsze podejście każdego uczestnika (kolejne podejścia są zawyżone

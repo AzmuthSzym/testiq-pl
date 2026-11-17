@@ -237,3 +237,5 @@ fieldset.assist label.check:has(input:checked) { border-color: var(--accent); }
 
 /* zasady uczciwości w instrukcji */
 p.rules { border-left: 3px solid var(--accent); padding: 6px 0 6px 12px; }
+.card.summary h2 { margin-top: 0; }
+#pid { word-break: break-all; }

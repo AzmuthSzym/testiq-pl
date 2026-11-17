@@ -4,57 +4,163 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prywatność — Test IQ PL</title>
+<meta name="description" content="Jakie dane zbieramy w testach zdolności, po co, jak długo je trzymamy i jak usunąć swoje wyniki.">
 <link rel="stylesheet" href="../assets/fonts.css">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
 <header class="site"><div class="wrap">
   <a class="brand" href="../">Test IQ <span>PL</span></a>
-  <span class="kicker">Wersja robocza</span>
 </div></header>
 <main class="wrap prose">
-<div class="draft" role="note"><strong>Szkic do weryfikacji.</strong> To projekt polityki prywatności przygotowany do sprawdzenia przez właściciela serwisu (i najlepiej prawnika). Nie jest jeszcze obowiązującym dokumentem. Fragmenty w nawiasach kwadratowych trzeba uzupełnić.</div>
 <div class="kicker">Ochrona danych</div>
 <h1>Prywatność</h1>
-<p class="lead">Zbieramy jak najmniej danych i tylko za twoją zgodą. Poniżej piszemy dokładnie, co, po co i jak długo.</p>
+<p class="lead">Zbieramy jak najmniej danych i tylko za twoją zgodą. Poniżej piszemy dokładnie, co zbieramy, po co, jak długo to trzymamy i jak możesz to usunąć.</p>
+<p class="note">Obowiązuje od 17 listopada 2026 r.</p>
 
-<h2>Administrator danych</h2>
-<p>[Imię i nazwisko albo nazwa, adres, adres e-mail do spraw danych osobowych.]</p>
+<div class="card summary">
+  <h2>W skrócie</h2>
+  <ul>
+    <li>Testy możesz robić <strong>bez zgody</strong>. Wtedy wynik zostaje tylko w twojej przeglądarce i nic nie trafia na nasz serwer.</li>
+    <li>Jeśli wyrazisz zgodę, zapisujemy twoje odpowiedzi, żeby opracować polskie normy testów. <strong>Nie pytamy o imię, e-mail ani adres</strong> i nie zapisujemy adresu IP.</li>
+    <li>Publikujemy tylko statystyki zbiorcze, nigdy pojedyncze wyniki.</li>
+    <li>Nie używamy plików cookie, analityki ani reklam. Nie sprzedajemy danych.</li>
+    <li>Swoje wyniki możesz <strong>usunąć jednym przyciskiem</strong> w sekcji <a href="#twoje-dane">Twoje dane</a>.</li>
+  </ul>
+</div>
 
-<h2>Co dzieje się bez twojej zgody</h2>
+<h2 id="twoje-dane">Twoje dane</h2>
+<div id="mine" class="card">
+  <p>Ładowanie…</p>
+</div>
+
+<h2>1. Kto odpowiada za dane</h2>
+<p>Administratorem danych jest <strong>Marek Wójcik</strong>, twórca serwisu testyzdolnosci.pl. We wszystkich sprawach dotyczących danych osobowych pisz na <a href="mailto:support@testyzdolnosci.pl">support@testyzdolnosci.pl</a>.</p>
+
+<h2>2. Co dzieje się bez twojej zgody</h2>
 <ul>
   <li>Twoje odpowiedzi i wynik zapisują się <strong>tylko w twojej przeglądarce</strong> (pamięć lokalna, <code>localStorage</code>), żeby pokazać ci wynik i profil. Nie trafiają na nasz serwer.</li>
-  <li>W przeglądarce zapisujemy też losowy identyfikator. Nie zawiera żadnych informacji o tobie, a służy tylko do odróżnienia twoich kolejnych podejść.</li>
-  <li>Stronę udostępnia GitHub Pages (GitHub, Inc.). GitHub, jak każdy serwer, przetwarza adres IP twojego urządzenia przy wyświetlaniu strony. [Do weryfikacji: zasady GitHub dotyczące danych odwiedzających i przekazywania danych poza EOG.]</li>
-  <li>Nie używamy plików cookie, narzędzi analitycznych ani reklam. Czcionki są serwowane z naszej strony, a nie z zewnętrznych serwerów.</li>
+  <li>W przeglądarce zapisujemy też losowy identyfikator. Nie zawiera żadnych informacji o tobie. Odróżnia twoje kolejne podejścia i pozwala usunąć twoje wyniki z serwera.</li>
+  <li>Stronę udostępnia GitHub Pages. Jak każdy serwer WWW, GitHub przetwarza adres IP urządzenia, które wyświetla stronę (szczegóły w punkcie 6).</li>
+  <li>Nie używamy plików cookie, narzędzi analitycznych ani reklam. Czcionki są wczytywane z naszej strony, a nie z zewnętrznych serwerów.</li>
 </ul>
 
-<h2>Co zbieramy, jeśli wyrazisz zgodę</h2>
-<p>Po zaznaczeniu zgody i ukończeniu testu wysyłamy na nasz serwer:</p>
+<h2>3. Co zbieramy, jeśli wyrazisz zgodę</h2>
+<p>Zgodę wyrażasz, zaznaczając pole przed testem. Po ukończeniu testu wysyłamy na nasz serwer:</p>
+<table class="res">
+  <tr><th>Dane</th><th>Po co</th></tr>
+  <tr><td>Odpowiedzi na zadania, ich poprawność i czas odpowiedzi</td><td>Wynik, normy i sprawdzanie jakości każdego zadania</td></tr>
+  <tr><td>Nazwa i wersja testu, czas trwania, data i godzina rozpoczęcia</td><td>Oddzielenie wersji testu i odrzucanie duplikatów</td></tr>
+  <tr><td>Losowy identyfikator z przeglądarki</td><td>Liczenie do norm tylko pierwszego podejścia, usuwanie wyników na twoją prośbę</td></tr>
+  <tr><td>Rok urodzenia <em>(nieobowiązkowo)</em></td><td>Porównanie z rówieśnikami</td></tr>
+  <tr><td>Wykształcenie <em>(nieobowiązkowo)</em></td><td>Sprawdzenie, czy próba nie jest zbyt jednostronna</td></tr>
+  <tr><td>Płeć <em>(nieobowiązkowo)</em></td><td>Sprawdzenie, czy każde zadanie jest tak samo uczciwe dla kobiet i mężczyzn o tych samych zdolnościach</td></tr>
+  <tr><td>Czy polski jest twoim językiem ojczystym <em>(nieobowiązkowo)</em></td><td>Do norm testów językowych wliczamy tylko osoby, dla których polski jest pierwszym językiem</td></tr>
+  <tr><td>Kraj zamieszkania: Polska albo inny <em>(nieobowiązkowo)</em></td><td>Oddzielenie wyników osób mieszkających w Polsce</td></tr>
+</table>
+<p>Nie pytamy o imię, adres e-mail, narodowość, miasto ani inne dane, które pozwalają łatwo cię zidentyfikować. Serwer odrzuca każde zgłoszenie z dodatkowymi polami.</p>
+
+<h2>4. Uczciwość pomiaru</h2>
+<p>Po teście pytamy, czy korzystano z pomocy (np. AI). Przy każdym zadaniu zapisujemy też, ile razy i na jak długo strona przestała być aktywna, czyli czy przełączono kartę albo aplikację. Nie wiemy, co wtedy robisz ani dokąd przechodzisz. Te informacje służą tylko do tego, żeby nie wliczać do norm testów rozwiązanych z pomocą. Wysyłamy je wyłącznie razem z wynikiem, za twoją zgodą.</p>
+
+<h2>5. Cel i podstawa prawna</h2>
+<p>Dane przetwarzamy wyłącznie po to, żeby opracować statystyki i normy testów oraz badać jakość zadań. Podstawą jest twoja zgoda (art. 6 ust. 1 lit. a RODO). Podanie danych jest dobrowolne. Bez zgody możesz rozwiązać każdy test i zobaczyć swój wynik.</p>
+<p>Wynik testu liczymy automatycznie, ale nie podejmujemy na jego podstawie żadnych decyzji wobec ciebie. Wynik jest tylko informacją dla ciebie.</p>
+<p>Publikujemy wyłącznie dane zbiorcze, np. średnią czy rozkład wyników. Statystyki dla grup (np. wieku) pokazujemy dopiero wtedy, gdy grupa liczy co najmniej 30 osób.</p>
+
+<h2>6. Gdzie są dane i kto ma do nich dostęp</h2>
 <ul>
-  <li>odpowiedzi na zadania, ich poprawność i czasy odpowiedzi;</li>
-  <li>nazwę i wersję testu, czas trwania, datę rozpoczęcia;</li>
-  <li>losowy identyfikator z przeglądarki;</li>
-  <li>dobrowolnie: rok urodzenia, poziom wykształcenia, płeć, czy polski jest twoim językiem ojczystym (tak / nie) i kraj zamieszkania (Polska / inny).</li>
+  <li><strong>Serwer z wynikami:</strong> wirtualny serwer w usłudze mikr.us, w centrum danych Hetzner Online GmbH w Unii Europejskiej. Dostęp do bazy ma tylko administrator.</li>
+  <li><strong>Cloudflare, Inc.</strong> pośredniczy w połączeniu między twoją przeglądarką a serwerem z wynikami. Chroni serwer przed atakami i szyfruje połączenie. Widzi przy tym adres IP i przesyłane dane, ale ich nie przechowuje na nasze potrzeby.</li>
+  <li><strong>GitHub, Inc.</strong> udostępnia samą stronę, czyli teksty i zadania. Widzi adres IP urządzenia, które wyświetla stronę. Wyników testów nie dostaje.</li>
 </ul>
-<p><strong>Po co te dane:</strong> rok urodzenia pozwala porównać cię z rówieśnikami. Płeć służy do sprawdzania, czy zadania są uczciwe, czyli czy kobiety i mężczyźni o tych samych zdolnościach radzą sobie z każdym zadaniem tak samo. Język ojczysty jest potrzebny, bo wynik testu słownictwa zależy od niego, więc do norm tego testu wliczamy tylko osoby, dla których polski jest pierwszym językiem. Kraj zamieszkania pozwala oddzielić wyniki osób mieszkających w Polsce od pozostałych.</p>
-<p>Nie pytamy o imię, adres e-mail, narodowość, miasto ani inne dane, które pozwalają cię zidentyfikować. Statystyki dla grup (np. wieku) pokazujemy tylko wtedy, gdy grupa ma co najmniej 30 osób. Serwer odrzuca każde zgłoszenie z dodatkowymi polami.</p>
-<p><strong>Uczciwość pomiaru:</strong> po teście pytamy, czy korzystano z pomocy (np. AI). Przy każdym zadaniu zapisujemy też, ile razy i na jak długo strona przestała być aktywna (przełączenie karty lub aplikacji). Nie wiemy, co wtedy robisz ani dokąd przechodzisz. Te informacje służą tylko do tego, żeby nie wliczać do norm testów rozwiązanych z pomocą, i są wysyłane wyłącznie razem z wynikiem, za twoją zgodą.</p>
-<p><strong>Adres IP:</strong> nie zapisujemy go w bazie ani w dziennikach serwera. Do ochrony przed nadużyciami (limit zgłoszeń) serwer przez dobę trzyma w pamięci operacyjnej skrót adresu z losową solą zmienianą codziennie. Po zmianie doby skrótu nie da się powiązać z adresem ani z poprzednimi zgłoszeniami.</p>
-<p><strong>Osoby poniżej 16 lat:</strong> nie zbieramy ich wyników. Strona nie wysyła wyniku, jeśli podany rok urodzenia wskazuje na wiek poniżej 16 lat, a serwer takie zgłoszenie odrzuca.</p>
+<p>Cloudflare i GitHub to firmy z USA. Przekazywanie danych do nich opiera się na decyzji Komisji Europejskiej w sprawie odpowiedniego stopnia ochrony (EU-US Data Privacy Framework), w którym obie firmy uczestniczą. Nie przekazujemy danych nikomu innemu i nie sprzedajemy ich.</p>
 
-<h2>Po co i na jakiej podstawie</h2>
-<p>Wyłącznie w celu opracowania statystyk i norm testów oraz badania jakości zadań. Podstawą jest twoja zgoda (art. 6 ust. 1 lit. a RODO). [Do weryfikacji: czy wyniki testów zdolności nie są danymi wymagającymi szczególnej ochrony; patrz LEGAL-TODO.]</p>
-<p>Dane publikujemy wyłącznie w postaci zbiorczej (np. średnia, rozkład wyników). Statystyki grup wieku pokazujemy dopiero przy co najmniej 30 osobach w grupie.</p>
+<h2>7. Jak długo</h2>
+<ul>
+  <li><strong>Wyniki na serwerze:</strong> 3 lata od przesłania. Potem usuwamy je automatycznie, a zostają tylko statystyki zbiorcze, z których nie da się odtworzyć pojedynczych wyników.</li>
+  <li><strong>Kopie zapasowe:</strong> robimy je codziennie i przechowujemy 14 dni. Wynik usunięty z bazy znika z kopii najpóźniej po 14 dniach.</li>
+  <li><strong>Dane w twojej przeglądarce:</strong> do czasu, aż je usuniesz (przyciskiem w sekcji <a href="#twoje-dane">Twoje dane</a> albo czyszcząc dane strony w przeglądarce).</li>
+</ul>
 
-<h2>Gdzie i jak długo</h2>
-<p>Na serwerze VPS w [kraj / dostawca]. Kopie zapasowe są robione codziennie i przechowywane 14 dni. Dane trzymamy do czasu opracowania norm, nie dłużej niż [okres, np. 5 lat], albo do wycofania zgody.</p>
+<h2>8. Jak chronimy dane</h2>
+<ul>
+  <li>Połączenie jest zawsze szyfrowane (HTTPS).</li>
+  <li>Serwer przyjmuje połączenia tylko przez Cloudflare i akceptuje wyłącznie wyniki w ściśle określonym formacie.</li>
+  <li><strong>Adresu IP nie zapisujemy</strong> w bazie ani w dziennikach serwera. Do ochrony przed nadużyciami (limit zgłoszeń) serwer przez dobę trzyma w pamięci skrót adresu z losową solą zmienianą codziennie. Po zmianie doby skrótu nie da się powiązać z adresem.</li>
+  <li>Usunięte wyniki są nadpisywane w pliku bazy, a nie tylko oznaczane jako usunięte.</li>
+</ul>
 
-<h2>Twoje prawa</h2>
-<p>Możesz wycofać zgodę, zażądać dostępu do danych, ich sprostowania lub usunięcia oraz złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych. Ponieważ nie znamy twojej tożsamości, do odnalezienia twoich danych potrzebny jest identyfikator z twojej przeglądarki. [Do zrobienia: sposób, w jaki uczestnik może zobaczyć swój identyfikator i wysłać prośbę, np. przycisk na stronie wyniku i adres e-mail.] Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania przed jej wycofaniem.</p>
+<h2>9. Twoje prawa</h2>
+<p>Masz prawo:</p>
+<ul>
+  <li>w każdej chwili <strong>wycofać zgodę</strong>, co nie wpływa na zgodność z prawem przetwarzania przed jej wycofaniem;</li>
+  <li>żądać <strong>usunięcia</strong> swoich danych, <strong>dostępu</strong> do nich, ich <strong>sprostowania</strong>, <strong>ograniczenia</strong> przetwarzania i <strong>przeniesienia</strong>;</li>
+  <li>złożyć <strong>skargę</strong> do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, <a href="https://uodo.gov.pl">uodo.gov.pl</a>).</li>
+</ul>
+<p><strong>Jak to zrobić:</strong> najprościej przyciskiem w sekcji <a href="#twoje-dane">Twoje dane</a>. Usuwa on od razu wszystkie twoje wyniki z serwera. W innych sprawach napisz na <a href="mailto:support@testyzdolnosci.pl">support@testyzdolnosci.pl</a> i podaj identyfikator z tej sekcji. Odpowiemy w ciągu miesiąca.</p>
+<p>Nie znamy twojej tożsamości, więc wyniki odnajdujemy wyłącznie po identyfikatorze z przeglądarki. Jeśli wyczyścisz dane przeglądarki, zanim usuniesz wyniki z serwera, nie będziemy mogli ich wskazać.</p>
+
+<h2>10. Osoby poniżej 16 lat</h2>
+<p>Nie zbieramy wyników osób poniżej 16 lat. Jeśli podany rok urodzenia na to wskazuje, strona nie wysyła wyniku, a serwer takie zgłoszenie odrzuca. Zaznaczając zgodę, potwierdzasz, że masz ukończone 16 lat.</p>
+
+<h2>11. Zmiany</h2>
+<p>Jeśli zmienimy te zasady, nowa wersja pojawi się na tej stronie z nową datą. Zmiana nie obejmuje wyników przesłanych wcześniej bez twojej zgody na nowe zasady.</p>
 </main>
 <footer><div class="wrap">
   <nav class="footnav"><a href="../metodologia/">Metodologia</a> · <a href="../prywatnosc/">Prywatność</a> · <a href="../zrodla/">Źródła</a></nav>
 </div></footer>
+<script src="../assets/config.js"></script>
+<script src="../assets/testiq-common.js"></script>
+<script>
+(function () {
+  'use strict';
+  const T = window.TestIQ;
+  const box = document.getElementById('mine');
+  const MAIL = 'support@testyzdolnosci.pl';
+
+  function keys() {
+    try { return Object.keys(localStorage).filter((k) => k.startsWith('testiq-')); } catch (e) { return []; }
+  }
+
+  function render(message) {
+    const id = T.store.get('testiq-pid');
+    const local = keys().filter((k) => k.startsWith('testiq-last-')).length;
+    if (!id && !local) {
+      box.innerHTML = '<p>W tej przeglądarce nie ma żadnych danych z naszej strony.</p>' + (message || '');
+      return;
+    }
+    const server = T.apiBase()
+      ? `<p><button class="btn" type="button" id="del-server">Usuń moje wyniki z serwera</button></p>
+         <p class="note">Usuwa wszystkie wyniki przesłane z tej przeglądarki. Jeśli nie wysyłano żadnych, nic się nie stanie.</p>`
+      : '<p class="note">Serwer nie zbiera jeszcze wyników, więc nic z tej przeglądarki do nas nie trafiło.</p>';
+    box.innerHTML = `
+      <p>Twój identyfikator: <code id="pid"></code></p>
+      <p>Wyniki zapisane w tej przeglądarce: ${local}.</p>
+      ${server}
+      <p><button class="btn ghost" type="button" id="del-local">Usuń dane z tej przeglądarki</button></p>
+      <p class="note">Najpierw usuń wyniki z serwera: bez identyfikatora nie będziemy mogli ich odnaleźć.</p>
+      <div id="del-msg" role="status">${message || ''}</div>`;
+    document.getElementById('pid').textContent = id || '(brak)';
+    const ds = document.getElementById('del-server');
+    if (ds) ds.addEventListener('click', () => {
+      if (!confirm('Usunąć wszystkie twoje wyniki z serwera? Tego nie da się cofnąć.')) return;
+      ds.disabled = true;
+      T.deleteMine().then((n) => {
+        const msg = n === null
+          ? `<p>Nie udało się połączyć z serwerem. Spróbuj później albo napisz na <a href="mailto:${MAIL}">${MAIL}</a> i podaj swój identyfikator.</p>`
+          : `<p><strong>Gotowe.</strong> Usunięte wyniki: ${n}. Z kopii zapasowych znikną najpóźniej po 14 dniach.</p>`;
+        render(msg);
+      });
+    });
+    document.getElementById('del-local').addEventListener('click', () => {
+      if (!confirm('Usunąć wyniki i identyfikator z tej przeglądarki?')) return;
+      keys().forEach((k) => { try { localStorage.removeItem(k); } catch (e) { /* brak dostępu */ } });
+      render('<p><strong>Gotowe.</strong> Dane z tej przeglądarki zostały usunięte.</p>');
+    });
+  }
+  render();
+})();
+</script>
 </body>
 </html>

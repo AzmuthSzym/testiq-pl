@@ -151,7 +151,7 @@
       </select>
     </label>
     <label class="check"><input type="checkbox" id="consent">
-      <span>Mam ukończone 16 lat i zgadzam się na anonimowe wykorzystanie moich odpowiedzi do opracowania norm testu (<a href="../prywatnosc/">zasady prywatności</a>). Bez zgody wynik zostaje tylko w tej przeglądarce.</span></label>`;
+      <span>Mam ukończone 16 lat i zgadzam się na wykorzystanie moich odpowiedzi do opracowania norm testu, bez imienia i danych kontaktowych (<a href="../prywatnosc/">zasady prywatności</a>). Zgodę mogę wycofać, a wyniki usunąć w każdej chwili. Bez zgody wynik zostaje tylko w tej przeglądarce.</span></label>`;
 
   function readMeta() {
     const by = Number(document.getElementById('by').value);
@@ -178,6 +178,24 @@
     return fetch(base + '/api/results', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(result),
     }).then((r) => r.ok).catch(() => false);
+  }
+
+  // Usunięcie wszystkich wyników tej przeglądarki z serwera (prawo do
+  // usunięcia danych). Zwraca liczbę usuniętych wyników albo null przy błędzie.
+  function deleteMine() {
+    const base = apiBase();
+    const id = store.get('testiq-pid');
+    if (!base || !id) return Promise.resolve(id ? null : 0);
+    return fetch(base + '/api/delete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ participant: id }),
+    }).then((r) => (r.ok ? r.json() : null)).then((d) => (d ? d.deleted : null)).catch(() => null);
+  }
+
+  // Pod wynikiem: informacja, że wynik trafił na serwer i jak go usunąć.
+  function sentNote(container, ok) {
+    if (!ok || !container) return;
+    container.insertAdjacentHTML('afterend', '<p class="note">Wynik został zapisany na serwerze. '
+      + 'Możesz go w każdej chwili usunąć: <a href="../prywatnosc/#twoje-dane">Prywatność, „Twoje dane”</a>.</p>');
   }
 
   function willSend(meta) {
@@ -388,6 +406,6 @@
     });
   }
 
-  root.TestIQ = { MIN_AGE, tooYoung, willSend, focusWatch, askAssist, AWAY_GRACE_MS, SLOW_RULE, RULES_NOTE, leftTab, pointsFor, scoreOf, fmtPoints, scoreNote, assisted, ASSISTED_NOTE, MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
+  root.TestIQ = { MIN_AGE, tooYoung, willSend, deleteMine, sentNote, focusWatch, askAssist, AWAY_GRACE_MS, SLOW_RULE, RULES_NOTE, leftTab, pointsFor, scoreOf, fmtPoints, scoreNote, assisted, ASSISTED_NOTE, MIN_N, MIN_N_IQ, MIN_N_NORMS, toIQ, composite, normFor, store, onKeys, choiceFromKey, guardUnload, participantId, apiBase, META_FORM, readMeta, sendResult, fetchNorms, percentile, histogramSvg, renderComparison };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.TestIQ;
 })(typeof window !== 'undefined' ? window : globalThis);

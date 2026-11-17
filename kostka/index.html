@@ -214,8 +214,12 @@
       <p>Wynik na skali IQ liczymy względem innych uczestników. Wystarczy 30 osób, żeby podać estymację wstępną z przedziałem błędu, który zawęża się z każdą kolejną osobą. Jeśli podasz rok urodzenia, a w twojej grupie wieku jest dość osób, porównujemy cię z rówieśnikami.</p>
       <p><button class="btn ghost" id="dl">Pobierz dane (JSON)</button> <a class="btn ghost" href="../">Wróć</a></p>
     `);
-    if (T.assisted(r.meta)) document.getElementById('compare').innerHTML = T.ASSISTED_NOTE;
-    else Promise.resolve(sent).then(() => T.renderComparison(document.getElementById('compare'), TEST_ID, score, r.meta));
+    const compare = document.getElementById('compare');
+    if (T.assisted(r.meta)) compare.innerHTML = T.ASSISTED_NOTE;
+    Promise.resolve(sent).then((ok) => {
+      if (!T.assisted(r.meta)) T.renderComparison(compare, TEST_ID, score, r.meta);
+      T.sentNote(compare, ok);
+    });
     document.getElementById('dl').addEventListener('click', () => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' }));

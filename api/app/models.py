@@ -19,6 +19,11 @@ ASSIST = Literal["nie", "ai", "inna"]
 MIN_AGE = 16
 
 
+class DeleteRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    participant: str = Field(pattern=r"^[A-Za-z0-9-]{8,64}$")
+
+
 class Meta(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

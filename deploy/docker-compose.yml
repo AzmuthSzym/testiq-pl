@@ -23,6 +23,7 @@ services:
       DB_PATH: /data/results.db
       BACKUP_DIR: /backups
       KEEP_DAYS: ${KEEP_DAYS:-14}
+      RETAIN_DAYS: ${RETAIN_DAYS:-1095}
     volumes:
       - ./data:/data
       - ./backups:/backups

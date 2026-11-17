@@ -492,3 +492,12 @@ Lista pytań do prawnika z wyraźnym zastrzeżeniem, że to nie porada prawna:
 - **Normy:** tylko polski jako język ojczysty (`language: True`).
 - **Status:** wersja próbna, bez ręcznego przeglądu przez native speakera poza autorem zadań. Po przeglądzie z Discorda i pilotażu: analiza zadań (trudność, moc różnicująca, atrakcyjność dystraktorów), poprawki jako `zdania-v2`.
 - **Testy:** `tests/sentence.test.js`, scenariusz 10b w e2e.
+
+## Prywatność i usuwanie wyników (2026-11-17)
+
+- **Polityka prywatności** (`prywatnosc/`) bez oznaczenia szkicu: administrator Marek Wójcik, kontakt support@testyzdolnosci.pl, sekcja „W skrócie”, tabela danych i celów, odbiorcy (mikr.us/Hetzner w UE, Cloudflare i GitHub z USA na podstawie DPF), okres 3 lata, zabezpieczenia, prawa i skarga do PUODO.
+- **Usuwanie przez uczestnika:** sekcja „Twoje dane” pokazuje identyfikator, przycisk usuwa wszystkie wyniki z serwera (`POST /api/delete`, limit zgłoszeń, `secure_delete`), drugi przycisk czyści dane w przeglądarce. Pod wynikiem informacja, że wynik zapisano i jak go usunąć.
+- **Usuwanie na prośbę e-mailem:** `./deploy.sh delete <id>`.
+- **Okres przechowywania:** kontener backup codziennie usuwa wyniki starsze niż `RETAIN_DAYS` (1095), z kopii znikają po 14 dniach.
+- **Zgoda w formularzu:** zamiast „anonimowe” (dane są pseudonimowe) „bez imienia i danych kontaktowych”, z informacją o wycofaniu zgody.
+- **Do startu zbierania:** działający adres support@ (Email Routing w Cloudflare) i `apiUrl` w `assets/config.js`.

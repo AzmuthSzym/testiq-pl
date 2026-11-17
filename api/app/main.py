@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 from .db import Database
-from .models import Result
+from .models import DeleteRequest, Result
 from .norms import assisted, by_age, kr20, summarize
 from .scoring import counted
 from .ratelimit import RateLimiter
@@ -108,6 +108,24 @@ def create_app(
         stored = app.state.db.insert_result(result, score)
         app.state.norms_cache.pop(result.test, None)
         return {"stored": stored, "duplicate": not stored}
+
+    @app.post("/api/delete")
+    async def delete_results(request: Request):
+        """Usunięcie wszystkich wyników uczestnika. Identyfikator to losowy
+        UUID znany tylko przeglądarce uczestnika, więc jego znajomość wystarcza
+        do potwierdzenia, że prośba pochodzi od tej osoby."""
+        body = await request.body()
+        if len(body) > 1024:
+            raise HTTPException(413, "Zbyt duże zgłoszenie.")
+        if not app.state.limiter.allow(client_ip(request)):
+            raise HTTPException(429, "Za dużo zgłoszeń. Spróbuj później.")
+        try:
+            req = DeleteRequest.model_validate_json(body)
+        except ValidationError:
+            raise HTTPException(422, "Nieprawidłowy identyfikator.")
+        deleted = app.state.db.delete_participant(req.participant)
+        app.state.norms_cache.clear()
+        return {"deleted": deleted}
 
     @app.get("/api/norms/{test}")
     def norms(test: str):
